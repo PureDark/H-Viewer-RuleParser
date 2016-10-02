@@ -11,7 +11,7 @@ $(document).ready(function(e) {
 		var targetUrl = $("#targetUrl").val();
         $.ajax({
 		     type: "GET",
-		     url: "servlet/SiteTester",
+		     url: "servlet/RuleTester",
 			 data: {
 				 	action: 'getList',
 				 	site: site,

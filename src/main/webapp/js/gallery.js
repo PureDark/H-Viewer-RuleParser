@@ -13,7 +13,7 @@ $(document).ready(function(e) {
 		var collection = $("#collection").val();
         $.ajax({
 		     type: "GET",
-		     url: "servlet/SiteTester",
+		     url: "servlet/RuleTester",
 			 data: {
 				 	action: 'getDetail',
 				 	site: site,
