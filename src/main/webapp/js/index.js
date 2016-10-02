@@ -10,7 +10,7 @@ $(document).ready(function(e) {
 		var site = $("#site").val();
 		var targetUrl = $("#targetUrl").val();
         $.ajax({
-		     type: "GET",
+		     type: "POST",
 		     url: "servlet/RuleTester",
 			 data: {
 				 	action: 'getList',

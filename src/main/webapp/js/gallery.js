@@ -12,7 +12,7 @@ $(document).ready(function(e) {
 		var site = $("#site").val();
 		var collection = $("#collection").val();
         $.ajax({
-		     type: "GET",
+		     type: "POST",
 		     url: "servlet/RuleTester",
 			 data: {
 				 	action: 'getDetail',
