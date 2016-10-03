@@ -1,22 +1,31 @@
 package ml.puredark.hviewer.ruletester;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import okhttp3.FormBody;
+import okhttp3.RequestBody;
 import ml.puredark.hviewer.ruletester.beans.Collection;
 import ml.puredark.hviewer.ruletester.beans.Rule;
 import ml.puredark.hviewer.ruletester.beans.Site;
 import ml.puredark.hviewer.ruletester.http.HViewerHttpClient;
 import ml.puredark.hviewer.ruletester.http.Logger;
+import ml.puredark.hviewer.ruletester.utils.Base64Util;
+import ml.puredark.hviewer.ruletester.utils.QRCodeUtil;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class RuleTesterServlet extends HttpServlet {
 
@@ -60,6 +69,31 @@ public class RuleTesterServlet extends HttpServlet {
 				String output = gson.toJson(collection);
 				out.println(output);
 			}
+		}else if("generateQrCode".equals(action)){
+
+	        RequestBody requestBody = new FormBody.Builder()
+	                .add("key", PasteEEConfig.appkey)
+	                .add("description", "")
+	                .add("paste", siteJson)
+	                .add("format", "json")
+	                .build();
+	        
+	        String result = HViewerHttpClient.post(PasteEEConfig.url, requestBody, null);
+	        String url = null;
+            try {
+                JsonObject jsonObject = new JsonParser().parse((String) result).getAsJsonObject();
+                if (jsonObject.has("status") && "success".equals(jsonObject.get("status").getAsString())) {
+                    url = jsonObject.get("paste").getAsJsonObject().get("raw").getAsString();
+					BufferedImage image = QRCodeUtil.createImage(url, null, false);
+					ByteArrayOutputStream byteOut = new ByteArrayOutputStream();  
+		            boolean flag = ImageIO.write(image, "png", byteOut);  
+		            byte[] bytes = byteOut.toByteArray();  
+					String base64 = Base64Util.getImageStr(bytes);
+					out.println(base64);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 		}
 		
 		out.flush();

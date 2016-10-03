@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import okhttp3.Cookie;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class HViewerHttpClient {
@@ -52,8 +53,38 @@ public class HViewerHttpClient {
         return null;
     }
 
+    public static String post(String url, RequestBody requestBody, String cookies){
+        if (url == null || !url.startsWith("http")) {
+            Logger.d("HViewerHttpClient", "url = "+url);
+            return null;
+        }
+        HRequestBuilder builder = new HRequestBuilder();
+        if (cookies != null) {
+            builder.addHeader("cookie", cookies);
+        }
+        Request request = builder
+                .url(url)
+                .post(requestBody)
+                .build();
+        try {
+            Response response = mClient.newCall(request).execute();
+            String contentType = response.header("Content-Type");
+            String body = null;
+            if (contentType == null || !contentType.contains("image")) {
+                byte[] b = response.body().bytes();
+                String charset = getCharset(new String(b));
+                body = new String(b, charset);
+            }
+            response.close();
+            return body;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     /**
-     * 获得字符�?
+     * 获得字符编码
      */
     public static String getCharset(String html) {
         Document doc = Jsoup.parse(html);

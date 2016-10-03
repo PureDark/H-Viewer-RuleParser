@@ -16,11 +16,17 @@
   <div style="width:100%; display:-webkit-box;">
   		<div style="width:40%; -webkit-box-flex:1.0;">
 			<textarea id="site" style="width:100%; height: 600px"  placeholder="在这粘贴规则"></textarea>
-            <input id="targetUrl" style="width:100%; height:auto; margin-top: 20px" type="text" placeholder="测试获取网址" />
-        	<button id="btnParseRule" style="width: auto; margin-top: 20px">格式化规则</button>
-        	<button id="btnTestRule" style="width: auto; margin-top: 20px; margin-left: 20px">测试获取列表</button>
+			<div style="width:100%; display:-webkit-box;">
+				<div style="-webkit-box-flex:1.0; height:auto; margin-top: 20px">
+		            <input id="targetUrl" style="width:100%; height:auto;" type="text" placeholder="测试获取网址" />
+		        	<button id="btnParseRule" style="width: auto; margin-top: 40px">格式化规则</button>
+		        	<button id="btnGenerateQrCode" style="width: auto; margin-top: 40px; margin-left: 20px">生成二维码</button>
+		        	<button id="btnTestRule" style="width: auto; margin-top: 40px; margin-left: 20px">测试获取列表</button>
+				</div>
+	        	<img id="qrcode" style="-webkit-box-flex: none; width: 120px; height: 120px; margin-left: 20px; margin-top: 20px;" />
+			</div>
         </div>
-        <div style="width:60%; -webkit-box-flex:1.0;">
+        <div style="width:60%; -webkit-box-flex:1.0; margin-left: 20px">
 			<textarea id="display" style="width:100%; height: 600px"  placeholder="这里是返回结果"></textarea>
         </div>
   </div>

@@ -8,6 +8,25 @@ $(document).ready(function(e) {
 		$("#collection").val(JSON.stringify(JSON.parse(collection), null, 4));
     });
 	
+	$("#btnGenerateQrCode").click(function(e) {
+		var site = $("#site").val();
+        $.ajax({
+		     type: "POST",
+		     url: "servlet/RuleTester",
+			 data: {
+				 	action: 'generateQrCode',
+				 	site: site
+			 },
+		     dataType: "text",
+		     success: function(result){
+				 $("#qrcode").attr("src", "data:image/png;base64," + result);
+		    },
+			error:function(xhr){
+				alert("二维码生成失败")
+			}
+		});
+    });
+	
 	$("#btnTestRule").click(function(e) {
 		var site = $("#site").val();
 		var collection = $("#collection").val();
