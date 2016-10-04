@@ -124,7 +124,8 @@ public class RuleParser {
         if(rule.tags!=null) {
             List<String> tagStrs = parseSinglePropertyMatchAll(element, rule.tags, sourceUrl, false);
             for (String tagStr : tagStrs) {
-                tags.add(new Tag(tags.size() + 1, tagStr));
+            	if(!TextUtils.isEmpty(tagStr))
+            		tags.add(new Tag(tags.size() + 1, tagStr));
             }
         }
 
