@@ -120,16 +120,26 @@ public class RuleParser {
             }
         }
 
+        Elements temp;
+
         List<Tag> tags = new ArrayList<>();
-        if(rule.tags!=null) {
+        if (rule.tagRule != null && rule.tagRule.item != null) {
+            temp = element.select(rule.tagRule.item.selector);
+            for (Element tagElement : temp) {
+                String tagTitle = parseSingleProperty(tagElement, rule.tagRule.title, sourceUrl, false);
+                String tagUrl = parseSingleProperty(tagElement, rule.tagRule.url, sourceUrl, true);
+                if(TextUtils.isEmpty(tagUrl))
+                    tagUrl = null;
+                tags.add(new Tag(tags.size() + 1, tagTitle, tagUrl));
+            }
+        } else if (rule.tags != null) {
             List<String> tagStrs = parseSinglePropertyMatchAll(element, rule.tags, sourceUrl, false);
             for (String tagStr : tagStrs) {
-            	if(!TextUtils.isEmpty(tagStr))
-            		tags.add(new Tag(tags.size() + 1, tagStr));
+                if (!TextUtils.isEmpty(tagStr))
+                    tags.add(new Tag(tags.size() + 1, tagStr));
             }
         }
 
-        Elements temp;
         List<Picture> pictures = new ArrayList<>();
         if (rule.pictureUrl != null && rule.pictureThumbnail != null) {
             if (rule.item != null) {
@@ -154,7 +164,16 @@ public class RuleParser {
         }
 
         List<Comment> comments = new ArrayList<>();
-        if (rule.commentItem != null && rule.commentContent != null) {
+        if (rule.commentRule != null && rule.commentRule.item != null && rule.commentRule.content != null){
+            temp = element.select(rule.commentRule.item.selector);
+            for (Element commentElement : temp) {
+                String commentAvatar = parseSingleProperty(commentElement, rule.commentRule.avatar, sourceUrl, false);
+                String commentAuthor = parseSingleProperty(commentElement, rule.commentRule.author, sourceUrl, false);
+                String commentDatetime = parseSingleProperty(commentElement, rule.commentRule.datetime, sourceUrl, false);
+                String commentContent = parseSingleProperty(commentElement, rule.commentRule.content, sourceUrl, false);
+                comments.add(new Comment(comments.size() + 1, commentAvatar, commentAuthor, commentDatetime, commentContent, sourceUrl));
+            }
+        }else if (rule.commentItem != null && rule.commentContent != null) {
             temp = element.select(rule.commentItem.selector);
             for (Element commentElement : temp) {
                 String commentAvatar = parseSingleProperty(commentElement, rule.commentAvatar, sourceUrl, false);
@@ -204,7 +223,7 @@ public class RuleParser {
             String prop;
             Elements temp = ("this".equals(selector.selector)) ? new Elements(element) : element.select(selector.selector);
             if (temp != null) {
-                for(Element elem : temp) {
+                for (Element elem : temp) {
                     if ("attr".equals(selector.fun)) {
                         prop = elem.attr(selector.param);
                     } else if ("html".equals(selector.fun)) {
