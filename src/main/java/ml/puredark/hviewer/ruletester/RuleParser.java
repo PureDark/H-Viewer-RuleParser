@@ -246,7 +246,7 @@ public class RuleParser {
                             }
                             if (isUrl) {
                                 if (TextUtils.isEmpty(prop))
-                                    return null;
+                                    break;
                                 prop = RegexValidateUtil.getAbsoluteUrlFromRelative(prop, sourceUrl);
                             }
                             props.add(StringEscapeUtils.unescapeHtml(prop.trim()));
@@ -254,7 +254,7 @@ public class RuleParser {
                     } else {
                         if (isUrl) {
                             if (TextUtils.isEmpty(prop))
-                                return null;
+                                break;
                             prop = RegexValidateUtil.getAbsoluteUrlFromRelative(prop, sourceUrl);
                         }
                         props.add(StringEscapeUtils.unescapeHtml(prop.trim()));
