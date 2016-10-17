@@ -50,51 +50,52 @@ public class RuleTesterServlet extends HttpServlet {
 		PrintWriter out = response.getWriter();
 		String action = request.getParameter("action");
 		String siteJson = request.getParameter("site");
-		if("getList".equals(action)){
-			String targetUrl = request.getParameter("targetUrl");
-			if(!TextUtils.isEmpty(siteJson) && !TextUtils.isEmpty(targetUrl)){
-				Gson gson = new Gson();
-				Site site = gson.fromJson(siteJson, Site.class);
-				List<Collection> collections = getCollections(site, targetUrl);
-				String output = gson.toJson(collections);
-				out.println(output);
+        try {
+			if("getList".equals(action)){
+				String targetUrl = request.getParameter("targetUrl");
+				if(!TextUtils.isEmpty(siteJson) && !TextUtils.isEmpty(targetUrl)){
+					Gson gson = new Gson();
+					Site site = gson.fromJson(siteJson, Site.class);
+					List<Collection> collections = getCollections(site, targetUrl);
+					String output = gson.toJson(collections);
+					out.println(output);
+				}
+			}else if("getDetail".equals(action)){
+				String collectionJson = request.getParameter("collection");
+				if(!TextUtils.isEmpty(collectionJson) && !TextUtils.isEmpty(collectionJson)){
+					Gson gson = new Gson();
+					Site site = gson.fromJson(siteJson, Site.class);
+					Collection collection = gson.fromJson(collectionJson, Collection.class);
+					collection = getCollectionDetail(site, collection);
+					String output = gson.toJson(collection);
+					out.println(output);
+				}
+			}else if("generateQrCode".equals(action)){
+	
+		        RequestBody requestBody = new FormBody.Builder()
+		                .add("key", PasteEEConfig.appkey)
+		                .add("description", "")
+		                .add("paste", siteJson)
+		                .add("format", "json")
+		                .build();
+		        
+		        String result = HViewerHttpClient.post(PasteEEConfig.url, requestBody, null);
+		        String url = null;
+	                JsonObject jsonObject = new JsonParser().parse((String) result).getAsJsonObject();
+	                if (jsonObject.has("status") && "success".equals(jsonObject.get("status").getAsString())) {
+	                    url = jsonObject.get("paste").getAsJsonObject().get("raw").getAsString();
+						BufferedImage image = QRCodeUtil.createImage(url, null, false);
+						ByteArrayOutputStream byteOut = new ByteArrayOutputStream();  
+			            boolean flag = ImageIO.write(image, "png", byteOut);  
+			            byte[] bytes = byteOut.toByteArray();  
+						String base64 = Base64Util.getImageStr(bytes);
+						out.println(base64);
+	                }
 			}
-		}else if("getDetail".equals(action)){
-			String collectionJson = request.getParameter("collection");
-			if(!TextUtils.isEmpty(collectionJson) && !TextUtils.isEmpty(collectionJson)){
-				Gson gson = new Gson();
-				Site site = gson.fromJson(siteJson, Site.class);
-				Collection collection = gson.fromJson(collectionJson, Collection.class);
-				collection = getCollectionDetail(site, collection);
-				String output = gson.toJson(collection);
-				out.println(output);
-			}
-		}else if("generateQrCode".equals(action)){
-
-	        RequestBody requestBody = new FormBody.Builder()
-	                .add("key", PasteEEConfig.appkey)
-	                .add("description", "")
-	                .add("paste", siteJson)
-	                .add("format", "json")
-	                .build();
-	        
-	        String result = HViewerHttpClient.post(PasteEEConfig.url, requestBody, null);
-	        String url = null;
-            try {
-                JsonObject jsonObject = new JsonParser().parse((String) result).getAsJsonObject();
-                if (jsonObject.has("status") && "success".equals(jsonObject.get("status").getAsString())) {
-                    url = jsonObject.get("paste").getAsJsonObject().get("raw").getAsString();
-					BufferedImage image = QRCodeUtil.createImage(url, null, false);
-					ByteArrayOutputStream byteOut = new ByteArrayOutputStream();  
-		            boolean flag = ImageIO.write(image, "png", byteOut);  
-		            byte[] bytes = byteOut.toByteArray();  
-					String base64 = Base64Util.getImageStr(bytes);
-					out.println(base64);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-		}
+        } catch (Exception e) {
+            e.printStackTrace();
+            out.println(e.getMessage());
+        }
 		
 		out.flush();
 		out.close();
