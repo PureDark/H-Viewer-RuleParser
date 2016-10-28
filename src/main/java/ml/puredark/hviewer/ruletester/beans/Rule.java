@@ -11,6 +11,7 @@ public class Rule {
     public Selector commentItem, commentAvatar, commentAuthor, commentDatetime, commentContent;
 
     public PictureRule pictureRule;
+    public VideoRule videoRule;
     public TagRule tagRule;
     public CommentRule commentRule;
 

@@ -11,6 +11,7 @@ public class Collection{
     public String referer;
     public List<Tag> tags;
     public List<Picture> pictures;
+    public List<Video> videos;
     public List<Comment> comments;
 
     public Collection(int cid) {
