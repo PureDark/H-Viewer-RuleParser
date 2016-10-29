@@ -5,7 +5,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
@@ -26,11 +28,40 @@ import ml.puredark.hviewer.ruletester.utils.QRCodeUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.GsonJsonProvider;
+import com.jayway.jsonpath.spi.json.JsonProvider;
+import com.jayway.jsonpath.spi.mapper.GsonMappingProvider;
+import com.jayway.jsonpath.spi.mapper.MappingProvider;
 
 public class RuleTesterServlet extends HttpServlet {
 
 	public RuleTesterServlet() {
 		super();
+
+        // 设置Json默认配置
+        Configuration.setDefaults(new Configuration.Defaults() {
+            private final JsonProvider jsonProvider = new GsonJsonProvider();
+            private final MappingProvider mappingProvider = new GsonMappingProvider();
+
+            @Override
+            public JsonProvider jsonProvider() {
+                return jsonProvider;
+            }
+
+            @Override
+            public MappingProvider mappingProvider() {
+                return mappingProvider;
+            }
+
+            @Override
+            public Set<Option> options() {
+                Set<Option> options = EnumSet.noneOf(Option.class);
+                options.add(Option.DEFAULT_PATH_LEAF_TO_NULL);
+                return options;
+            }
+        });
 	}
 	
 	@Override
@@ -108,10 +139,13 @@ public class RuleTesterServlet extends HttpServlet {
         String html = "";
         if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
             String params = (url == null) ? "" : url.substring(url.indexOf('?'));
+            Logger.d("getCollections", "post");
         	html = HViewerHttpClient.post(url, params, site.cookie);
         }else {
+            Logger.d("getCollections", "get");
         	html = HViewerHttpClient.get(url, site.cookie);
         }
+        Logger.d("getCollections", "result:"+html);
         List<Collection> collections = new ArrayList<Collection>();
         collections = RuleParser.getCollections(collections, html, rule, url);
         return collections;
