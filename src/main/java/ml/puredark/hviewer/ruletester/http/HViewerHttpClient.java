@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import okhttp3.Cookie;
+import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -53,6 +54,18 @@ public class HViewerHttpClient {
         return null;
     }
 
+    public static String post(String url, String paramsString, String cookies) {
+        String[] paramStrings = paramsString.split("&");
+        FormBody.Builder formBody = new FormBody.Builder();
+        for (String paramString : paramStrings) {
+            String[] pram = paramString.split("=");
+            if (pram.length != 2) continue;
+            formBody.add(pram[0], pram[1]);
+        }
+        RequestBody requestBody = formBody.build();
+        return post(url, requestBody, cookies);
+    }
+    
     public static String post(String url, RequestBody requestBody, String cookies){
         if (url == null || !url.startsWith("http")) {
             Logger.d("HViewerHttpClient", "url = "+url);

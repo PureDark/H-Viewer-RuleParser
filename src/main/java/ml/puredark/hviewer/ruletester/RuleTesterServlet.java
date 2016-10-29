@@ -105,16 +105,28 @@ public class RuleTesterServlet extends HttpServlet {
         final Rule rule = site.indexRule;
         final String url = targetUrl;
         Logger.d("getCollections", url);
-        String html = HViewerHttpClient.get(url, site.cookie);
+        String html = "";
+        if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
+            String params = (url == null) ? "" : url.substring(url.indexOf('?'));
+        	html = HViewerHttpClient.post(url, params, site.cookie);
+        }else {
+        	html = HViewerHttpClient.get(url, site.cookie);
+        }
         List<Collection> collections = new ArrayList<Collection>();
         collections = RuleParser.getCollections(collections, html, rule, url);
         return collections;
     }
 	
 	private Collection getCollectionDetail(Site site, Collection collection) {
-        final String url = site.getGalleryUrl(collection.idCode, 1);
+        final String url = site.getGalleryUrl(collection.idCode, 1, collection.pictures);
         Logger.d("getCollectionDetail", url);
-        String html = HViewerHttpClient.get(url, site.cookie);
+        String html = "";
+        if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
+            String params = (url == null) ? "" : url.substring(url.indexOf('?'));
+        	html = HViewerHttpClient.post(url, params, site.cookie);
+        }else {
+        	html = HViewerHttpClient.get(url, site.cookie);
+        }
         collection = RuleParser.getCollectionDetail(collection, html, site.galleryRule, url);
         return collection;
     }
