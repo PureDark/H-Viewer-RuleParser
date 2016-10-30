@@ -178,7 +178,6 @@ public class RuleTesterServlet extends HttpServlet {
 	
 	private String getHtmlWithBrowser(String url, String cookie){
 		LinkedHashMap<String, String> headers = new LinkedHashMap<String, String>();
-		
 		headers.put("cookie", cookie);
 		
 	    JBrowserDriver driver = new JBrowserDriver(
