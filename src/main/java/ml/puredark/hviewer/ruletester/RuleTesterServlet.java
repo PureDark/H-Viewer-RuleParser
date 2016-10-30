@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -34,6 +35,10 @@ import com.jayway.jsonpath.spi.json.GsonJsonProvider;
 import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.GsonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
+import com.machinepublishers.jbrowserdriver.JBrowserDriver;
+import com.machinepublishers.jbrowserdriver.RequestHeaders;
+import com.machinepublishers.jbrowserdriver.Settings;
+import com.machinepublishers.jbrowserdriver.Timezone;
 
 public class RuleTesterServlet extends HttpServlet {
 
@@ -137,7 +142,10 @@ public class RuleTesterServlet extends HttpServlet {
         final String url = targetUrl;
         Logger.d("getCollections", url);
         String html = "";
-        if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
+        if (site.hasFlag(Site.FLAG_JS_NEEDED_ALL) || site.hasFlag(Site.FLAG_JS_NEEDED_INDEX)){
+            Logger.d("getCollections", "browser");
+        	html = getHtmlWithBrowser(targetUrl, site.cookie);
+        }else if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
             String params = (url == null) ? "" : url.substring(url.indexOf('?'));
             Logger.d("getCollections", "post");
         	html = HViewerHttpClient.post(url, params, site.cookie);
@@ -155,7 +163,10 @@ public class RuleTesterServlet extends HttpServlet {
         final String url = site.getGalleryUrl(collection.idCode, 1, collection.pictures);
         Logger.d("getCollectionDetail", url);
         String html = "";
-        if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
+        if (site.hasFlag(Site.FLAG_JS_NEEDED_ALL) || site.hasFlag(Site.FLAG_JS_NEEDED_GALLERY)){
+            Logger.d("getCollections", "browser");
+        	html = getHtmlWithBrowser(url, site.cookie);
+        }else if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
             String params = (url == null) ? "" : url.substring(url.indexOf('?'));
         	html = HViewerHttpClient.post(url, params, site.cookie);
         }else {
@@ -164,6 +175,33 @@ public class RuleTesterServlet extends HttpServlet {
         collection = RuleParser.getCollectionDetail(collection, html, site.galleryRule, url);
         return collection;
     }
+	
+	private String getHtmlWithBrowser(String url, String cookie){
+		LinkedHashMap<String, String> headers = new LinkedHashMap<String, String>();
+		
+		headers.put("cookie", cookie);
+		
+	    JBrowserDriver driver = new JBrowserDriver(
+	    		Settings.builder()
+	    		.timezone(Timezone.ASIA_SHANGHAI)
+	    		.ajaxResourceTimeout(15000)
+	    		.headless(true)
+	    		.blockAds(true)
+	    		.requestHeaders(new RequestHeaders(headers))
+	    		.build()
+	    );
+
+	    driver.get(url);
+
+	    System.out.println(driver.getStatusCode());
+	    
+	    String html = driver.getPageSource();
+//	    System.out.println(driver.getPageSource());
+
+	    driver.quit();
+	    
+	    return html;
+	}
 
 
 }
