@@ -172,6 +172,7 @@ public class RuleTesterServlet extends HttpServlet {
         }else {
         	html = HViewerHttpClient.get(url, site.cookie);
         }
+        Logger.d("getCollectionDetail", html);
         collection = RuleParser.getCollectionDetail(collection, html, site.galleryRule, url);
         return collection;
     }
