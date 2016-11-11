@@ -205,7 +205,7 @@ public class RuleParser {
                 Element element = Jsoup.parse(description);
                 element.select("iframe").remove();
                 element.select("script").remove();
-                description = element.toString();
+                description = element.select("body").html();
             } catch (Exception e) {
                 e.printStackTrace();
             }
