@@ -127,6 +127,14 @@ public class RuleTesterServlet extends HttpServlet {
 						String base64 = Base64Util.getImageStr(bytes);
 						out.println(base64);
 	                }
+			}else if("getHtml".equals(action)){
+				String targetUrl = request.getParameter("targetUrl");
+				if(!TextUtils.isEmpty(siteJson) && !TextUtils.isEmpty(targetUrl)){
+					Gson gson = new Gson();
+					Site site = gson.fromJson(siteJson, Site.class);
+					String html = HViewerHttpClient.get(targetUrl, site.cookie);
+					out.println(html);
+				}
 			}
         } catch (Exception e) {
             e.printStackTrace();
