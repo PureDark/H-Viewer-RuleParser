@@ -144,101 +144,97 @@ public class RuleParser {
         return string.startsWith("{") || string.startsWith("[");
     }
 
-    public static List<Collection> getCollections(List<Collection> collections, String text, Rule rule, String sourceUrl) {
+    public static List<Collection> getCollections(List<Collection> collections, String text, Rule rule, String sourceUrl) throws Exception {
         return getCollections(collections, text, rule, sourceUrl, false);
     }
 
-    public static List<Collection> getCollections(List<Collection> collections, String text, Rule rule, String sourceUrl, boolean noRegex) {
-        try {
-            Iterable items;
-            if (!isJson(text)) {
-                Document doc = Jsoup.parse(text);
-                items = doc.select(rule.item.selector);
-                for (Object item : items) {
-                    String itemStr;
-                    if (item instanceof Element) {
-                        if ("attr".equals(rule.item.fun))
-                            itemStr = ((Element) item).attr(rule.title.param);
-                        else if ("html".equals(rule.item.fun))
-                            itemStr = ((Element) item).html();
-                        else if ("text".equals(rule.item.fun))
-                            itemStr = ((Element) item).text();
-                        else
-                            itemStr = item.toString();
-                    } else
-                        continue;
-                    if (!noRegex && rule.item.regex != null) {
-                        Pattern pattern = Pattern.compile(rule.item.regex);
-                        Matcher matcher = pattern.matcher(itemStr);
-                        Logger.d("RuleParser", "beforeMatch");
-                        if (!matcher.find()) {
-                            continue;
-                        } else if (matcher.groupCount() >= 1) {
-                            Logger.d("RuleParser", "matcher.groupCount() >= 1");
-                            if (rule.item.replacement != null) {
-                                itemStr = rule.item.replacement;
-                                for (int i = 1; i <= matcher.groupCount(); i++) {
-                                    String replace = matcher.group(i);
-                                    itemStr = itemStr.replaceAll("\\$" + i, (replace != null) ? replace : "");
-                                }
-                            } else {
-                                itemStr = matcher.group(1);
-                            }
-                        }
-                    }
-                    if (rule.item.path != null && isJson(itemStr)) {
-                        Logger.d("RuleParser", "isJson : true");
-                        collections = getCollections(collections, itemStr, rule, sourceUrl, true);
-                    } else {
-                        Collection collection = new Collection(collections.size() + 1);
-                        collection = getCollectionDetail(collection, item, rule, sourceUrl);
-                        collections.add(collection);
-                    }
-                }
-            } else {
-                ReadContext ctx = JsonPath.parse(text);
-                JsonElement element = ctx.read(rule.item.path, JsonElement.class);
-                if (element instanceof JsonArray)
-                    items = element.getAsJsonArray();
-                else {
-                    items = new JsonArray();
-                    ((JsonArray) items).add(element);
-                }
-                Logger.d("RuleParser", items.toString());
-                for (Object item : items) {
-                    String itemStr;
-                    if (item instanceof JsonElement)
-                        itemStr = item.toString();
+    public static List<Collection> getCollections(List<Collection> collections, String text, Rule rule, String sourceUrl, boolean noRegex) throws Exception {
+        Iterable items;
+        if (!isJson(text)) {
+            Document doc = Jsoup.parse(text);
+            items = doc.select(rule.item.selector);
+            for (Object item : items) {
+                String itemStr;
+                if (item instanceof Element) {
+                    if ("attr".equals(rule.item.fun))
+                        itemStr = ((Element) item).attr(rule.title.param);
+                    else if ("html".equals(rule.item.fun))
+                        itemStr = ((Element) item).html();
+                    else if ("text".equals(rule.item.fun))
+                        itemStr = ((Element) item).text();
                     else
+                        itemStr = item.toString();
+                } else
+                    continue;
+                if (!noRegex && rule.item.regex != null) {
+                    Pattern pattern = Pattern.compile(rule.item.regex);
+                    Matcher matcher = pattern.matcher(itemStr);
+                    Logger.d("RuleParser", "beforeMatch");
+                    if (!matcher.find()) {
                         continue;
-                    if (!noRegex && rule.item.regex != null) {
-                        Pattern pattern = Pattern.compile(rule.item.regex);
-                        Matcher matcher = pattern.matcher(itemStr);
-                        if (!matcher.find()) {
-                            continue;
-                        } else if (matcher.groupCount() >= 1) {
-                            if (rule.item.replacement != null) {
-                                itemStr = rule.item.replacement;
-                                for (int i = 1; i <= matcher.groupCount(); i++) {
-                                    String replace = matcher.group(i);
-                                    itemStr = itemStr.replaceAll("\\$" + i, (replace != null) ? replace : "");
-                                }
-                            } else {
-                                itemStr = matcher.group(1);
+                    } else if (matcher.groupCount() >= 1) {
+                        Logger.d("RuleParser", "matcher.groupCount() >= 1");
+                        if (rule.item.replacement != null) {
+                            itemStr = rule.item.replacement;
+                            for (int i = 1; i <= matcher.groupCount(); i++) {
+                                String replace = matcher.group(i);
+                                itemStr = itemStr.replaceAll("\\$" + i, (replace != null) ? replace : "");
                             }
+                        } else {
+                            itemStr = matcher.group(1);
                         }
                     }
-                    if (rule.item.selector != null && !isJson(itemStr)) {
-                        collections = getCollections(collections, itemStr, rule, sourceUrl, true);
-                    } else {
-                        Collection collection = new Collection(collections.size() + 1);
-                        collection = getCollectionDetail(collection, item, rule, sourceUrl);
-                        collections.add(collection);
-                    }
+                }
+                if (rule.item.path != null && isJson(itemStr)) {
+                    Logger.d("RuleParser", "isJson : true");
+                    collections = getCollections(collections, itemStr, rule, sourceUrl, true);
+                } else {
+                    Collection collection = new Collection(collections.size() + 1);
+                    collection = getCollectionDetail(collection, item, rule, sourceUrl);
+                    collections.add(collection);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } else {
+            ReadContext ctx = JsonPath.parse(text);
+            JsonElement element = ctx.read(rule.item.path, JsonElement.class);
+            if (element instanceof JsonArray)
+                items = element.getAsJsonArray();
+            else {
+                items = new JsonArray();
+                ((JsonArray) items).add(element);
+            }
+            Logger.d("RuleParser", items.toString());
+            for (Object item : items) {
+                String itemStr;
+                if (item instanceof JsonElement)
+                    itemStr = item.toString();
+                else
+                    continue;
+                if (!noRegex && rule.item.regex != null) {
+                    Pattern pattern = Pattern.compile(rule.item.regex);
+                    Matcher matcher = pattern.matcher(itemStr);
+                    if (!matcher.find()) {
+                        continue;
+                    } else if (matcher.groupCount() >= 1) {
+                        if (rule.item.replacement != null) {
+                            itemStr = rule.item.replacement;
+                            for (int i = 1; i <= matcher.groupCount(); i++) {
+                                String replace = matcher.group(i);
+                                itemStr = itemStr.replaceAll("\\$" + i, (replace != null) ? replace : "");
+                            }
+                        } else {
+                            itemStr = matcher.group(1);
+                        }
+                    }
+                }
+                if (rule.item.selector != null && !isJson(itemStr)) {
+                    collections = getCollections(collections, itemStr, rule, sourceUrl, true);
+                } else {
+                    Collection collection = new Collection(collections.size() + 1);
+                    collection = getCollectionDetail(collection, item, rule, sourceUrl);
+                    collections.add(collection);
+                }
+            }
         }
         return collections;
     }
