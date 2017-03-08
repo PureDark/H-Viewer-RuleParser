@@ -6,11 +6,10 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 public class MathUtil {
 
     /**
-     * 格式化日�?
+     * 格式化日期
      *
      * @param obj    日期对象
      * @param format 格式化字符串
@@ -33,7 +32,7 @@ public class MathUtil {
     }
 
     /**
-     * 格式化数�?
+     * 格式化数字
      *
      * @param obj    数字对象
      * @param format 格式化字符串
@@ -72,7 +71,7 @@ public class MathUtil {
      * @return
      */
     public static String computeString(String string) {
-        String regexCheck = "[\\(\\)\\d\\+\\-\\*/\\.]*";// 是否是合法的表达�?
+        String regexCheck = "[\\(\\)\\d\\+\\-\\*/\\.]*";// 是否是合法的表达式
 
         if (!Pattern.matches(regexCheck, string))
             return string;
@@ -80,11 +79,11 @@ public class MathUtil {
         Matcher matcher = null;
         String temp = "";
         int index = -1;
-        String regex = "\\([\\d\\.\\+\\-\\*/]+\\)";// 提取括号表达�?
+        String regex = "\\([\\d\\.\\+\\-\\*/]+\\)";// 提取括号表达式
         string = string.replaceAll("\\s", "");// 去除空格
         try {
             Pattern pattern = Pattern.compile(regex);
-            // 循环计算�?��括号里的表达�?
+            // 循环计算所有括号里的表达式
             while (pattern.matcher(string).find()) {
                 matcher = pattern.matcher(string);
                 while (matcher.find()) {
@@ -95,7 +94,7 @@ public class MathUtil {
                             + string.substring(index + temp.length());
                 }
             }
-            // �?��计算总的表达式结�?
+            // 最后计算总的表达式结果
             string = computeStirngNoBracket(string);
         } catch (NumberFormatException e) {
             return e.getMessage();
@@ -104,7 +103,7 @@ public class MathUtil {
     }
 
     /**
-     * 计算不包含括号的表达�?
+     * 计算不包含括号的表达式
      *
      * @param string
      * @return
@@ -117,7 +116,7 @@ public class MathUtil {
         String temp = "";
         int index = -1;
 
-        // 解析乘除�?
+        // 解析乘除法
         Pattern pattern = Pattern.compile(regexMultiAndDivision);
         Matcher matcher = null;
         while (pattern.matcher(string).find()) {
@@ -130,7 +129,7 @@ public class MathUtil {
             }
         }
 
-        // 解析加减�?
+        // 解析加减法
         pattern = Pattern.compile(regexAdditionAndSubtraction);
         while (pattern.matcher(string).find()) {
             matcher = pattern.matcher(string);
@@ -153,7 +152,7 @@ public class MathUtil {
     }
 
     /**
-     * 执行乘除�?
+     * 执行乘除法
      *
      * @param string
      * @return
@@ -184,7 +183,7 @@ public class MathUtil {
     }
 
     /**
-     * 执行加减�?
+     * 执行加减法
      *
      * @param string
      * @return
