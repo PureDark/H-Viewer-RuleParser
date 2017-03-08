@@ -4,7 +4,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 使用正则表达式验证输入格�?
+ * 使用正则表达式验证输入格式
  */
 public class RegexValidateUtil {
     /**
@@ -44,6 +44,18 @@ public class RegexValidateUtil {
         return flag;
     }
 
+    public static boolean urlHasProtocol(String url){
+        if(url==null)
+            return false;
+        if(url.startsWith("magnet:?"))
+            return true;
+        Pattern p = Pattern.compile("\\w+://", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = p.matcher(url);
+        if (matcher.find())
+            return true;
+        return false;
+    }
+
     public static String getHostFromUrl(String url) {
         Pattern p = Pattern.compile("https?://[^/]*", Pattern.CASE_INSENSITIVE);
         Matcher matcher = p.matcher(url);
@@ -72,9 +84,14 @@ public class RegexValidateUtil {
     }
 
     public static String getAbsoluteUrlFromRelative(String url, String host) {
-        if(url.startsWith("http://")||url.startsWith("https://"))
+        if(urlHasProtocol(url))
             return url;
-        if (url.startsWith("/"))
+        if (url.startsWith("//"))
+            if(host.startsWith("https://"))
+                return "https:"+url;
+            else
+                return "http:"+url;
+        else if (url.startsWith("/"))
             return getHostFromUrl(host) + url;
         else if (url.startsWith("./"))
             return geCurrDirFromUrl(host) + url.substring(2);
@@ -93,3 +110,4 @@ public class RegexValidateUtil {
             return geCurrDirFromUrl(host) + url;
     }
 }
+

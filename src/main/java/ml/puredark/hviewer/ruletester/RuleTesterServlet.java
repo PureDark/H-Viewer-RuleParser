@@ -145,7 +145,7 @@ public class RuleTesterServlet extends HttpServlet {
 		out.close();
 	}
 	
-	private List<Collection> getCollections(Site site, String targetUrl) {
+	private List<Collection> getCollections(Site site, String targetUrl) throws Exception {
         final Rule rule = site.indexRule;
         final String url = targetUrl;
         Logger.d("getCollections", url);
