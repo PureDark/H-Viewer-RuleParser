@@ -129,12 +129,15 @@ public class RuleTesterServlet extends HttpServlet {
 	                }
 			}else if("getHtml".equals(action)){
 				String targetUrl = request.getParameter("targetUrl");
+	            Logger.d("doPost", "targetUrl:"+targetUrl);
 				if(!TextUtils.isEmpty(siteJson) && !TextUtils.isEmpty(targetUrl)){
 					Gson gson = new Gson();
 					Site site = gson.fromJson(siteJson, Site.class);
 					String html = HViewerHttpClient.get(targetUrl, site.cookie);
 					out.println(html);
 				}
+			}else{
+				out.println("no action");
 			}
         } catch (Exception e) {
             e.printStackTrace();

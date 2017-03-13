@@ -26,13 +26,15 @@ $(document).ready(function(e) {
     });
 	
 	$("#btnTestRule").click(function(e) {
+		var getHtml = ($(this).attr("getHtml")=="true");
+		var action = (getHtml==true)?"getHtml":"getList";
 		var site = $("#site").val();
 		var targetUrl = $("#targetUrl").val();
-        $.ajax({
+	    $.ajax({
 		     type: "POST",
 		     url: "servlet/RuleTester",
 			 data: {
-				 	action: 'getList',
+				 	action: action,
 				 	site: site,
 					targetUrl: targetUrl
 			 },
