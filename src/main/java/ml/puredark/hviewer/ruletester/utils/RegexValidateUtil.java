@@ -74,7 +74,7 @@ public class RegexValidateUtil {
             return "";
     }
 
-    public static String geCurrDirFromUrl(String url) {
+    public static String getCurrDirFromUrl(String url) {
         Pattern p = Pattern.compile("https?://[\\w./]*/", Pattern.CASE_INSENSITIVE);
         Matcher matcher = p.matcher(url);
         if (matcher.find())
@@ -84,6 +84,10 @@ public class RegexValidateUtil {
     }
 
     public static String getAbsoluteUrlFromRelative(String url, String host) {
+        if(url!=null)
+            url = url.replaceAll("\\\\/", "/");
+        else
+            return url;
         if(urlHasProtocol(url))
             return url;
         if (url.startsWith("//"))
@@ -94,7 +98,7 @@ public class RegexValidateUtil {
         else if (url.startsWith("/"))
             return getHostFromUrl(host) + url;
         else if (url.startsWith("./"))
-            return geCurrDirFromUrl(host) + url.substring(2);
+            return getCurrDirFromUrl(host) + url.substring(2);
         else if (url.startsWith("../../")) {
             Pattern p = Pattern.compile("(https?://[\\w./]*/).*/.*/", Pattern.CASE_INSENSITIVE);
             Matcher matcher = p.matcher(url);
@@ -107,7 +111,7 @@ public class RegexValidateUtil {
             String prefix = (matcher.find()) ? matcher.group(1) : "";
             return prefix + url.substring(3);
         } else
-            return geCurrDirFromUrl(host) + url;
+            return getCurrDirFromUrl(host) + url;
     }
 }
 
