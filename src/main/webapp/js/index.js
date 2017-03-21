@@ -42,10 +42,10 @@ $(document).ready(function(e) {
 				 	site: site,
 					targetUrl: targetUrl
 			 },
-		     dataType: "json",
+		     dataType: "text",
 		     success: function(result){
 		 		try { 
-					$("#display").val(JSON.stringify(result, null, 4));
+					$("#display").val(JSON.stringify(JSON.parse(result), null, 4));
 		 		} catch (e) {
 		 			$("#display").val(e.message);
 		 		} 
