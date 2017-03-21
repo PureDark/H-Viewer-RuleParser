@@ -74,67 +74,17 @@ public class Site  {
     }
 
     public String getListUrl(String url, int page, String keyword, List<Collection> collections) {
-        Map<String, String> matchResult = RuleParser.parseUrl(url);
-        String pageStr = matchResult.get("page");
-        int startPage;
-        try {
-            if ("minid".equals(pageStr)) {
-                startPage = 0;
-                int min = Integer.MAX_VALUE;
-                for (Collection collection : collections) {
-                    min = Math.min(min, Integer.parseInt(collection.idCode.replaceAll("[^0-9]", "")));
-                }
-                page = min;
-            } else if ("maxid".equals(pageStr)) {
-                startPage = 0;
-                int max = Integer.MIN_VALUE;
-                for (Collection collection : collections) {
-                    max = Math.max(max, Integer.parseInt(collection.idCode.replaceAll("[^0-9]", "")));
-                }
-                page = max;
-            } else {
-                startPage = (pageStr != null) ? Integer.parseInt(pageStr) : 0;
-            }
-        } catch (NumberFormatException e) {
-            startPage = 0;
-        }
-        url = url.replaceAll("\\{pageStr:(.*?\\{.*?\\}.*?)\\}", (page == startPage) ? "" : "" + matchResult.get("pageStr"))
-                .replaceAll("\\{keyword:.*?\\}", keyword)
-                .replaceAll("\\{page:.*?\\}", "" + page);
-
-        return url;
+        Object[] array = (collections != null) ? collections.toArray() : null;
+        return RuleParser.parseUrl(url, page, "", keyword, array);
     }
 
     public String getGalleryUrl(String idCode, int page, List<Picture> pictures) {
-        Map<String, String> matchResult = RuleParser.parseUrl(galleryUrl);
-        String pageStr = matchResult.get("page");
-        boolean firstPage;
-        try {
-            if ("minid".equals(pageStr)) {
-                firstPage = (page == 0);
-                int min = Integer.MAX_VALUE;
-                for (Picture picture : pictures) {
-                    min = Math.min(min, picture.pid);
-                }
-                page = min;
-            } else if ("maxid".equals(pageStr)) {
-                firstPage = (page == 0);
-                int max = Integer.MIN_VALUE;
-                for (Picture picture : pictures) {
-                    max = Math.max(max, picture.pid);
-                }
-                page = max;
-            } else {
-                int startPage = (pageStr != null) ? Integer.parseInt(pageStr) : 0;
-                firstPage = (page == startPage);
-            }
-        } catch (NumberFormatException e) {
-            firstPage = (page == 0);
-        }
-        String url = galleryUrl.replaceAll("\\{pageStr:(.*?\\{.*?\\}.*?)\\}", firstPage ? "" : "" + matchResult.get("pageStr"))
-                .replaceAll("\\{page:.*?\\}", "" + page)
-                .replaceAll("\\{idCode:\\}", idCode);
-        return url;
+        return getGalleryUrl(galleryUrl, idCode, page, pictures);
+    }
+
+    public String getGalleryUrl(String inUrl, String idCode, int page, List<Picture> pictures) {
+        Object[] array = (pictures != null) ? pictures.toArray() : null;
+        return RuleParser.parseUrl(inUrl, page, idCode, "", array);
     }
     
 }

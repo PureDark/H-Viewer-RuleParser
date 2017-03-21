@@ -171,7 +171,7 @@ public class RuleTesterServlet extends HttpServlet {
     }
 	
 	private Collection getCollectionDetail(Site site, Collection collection) {
-        final String url = site.getGalleryUrl(collection.idCode, 1, collection.pictures);
+        final String url = site.getGalleryUrl(collection.idCode, 0, collection.pictures);
         Logger.d("getCollectionDetail", url);
         String html = "";
         if (site.hasFlag(Site.FLAG_JS_NEEDED_ALL) || site.hasFlag(Site.FLAG_JS_NEEDED_GALLERY)){
