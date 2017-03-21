@@ -47,7 +47,7 @@ $(document).ready(function(e) {
 		 		try { 
 					$("#display").val(JSON.stringify(JSON.parse(result), null, 4));
 		 		} catch (e) {
-		 			$("#display").val(e.message);
+		 			$("#display").val(result);
 		 		} 
 		    },
 			error:function(xhr){
