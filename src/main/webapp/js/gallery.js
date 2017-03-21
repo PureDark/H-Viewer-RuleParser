@@ -2,10 +2,14 @@
 $(document).ready(function(e) {
 	
 	$("#btnParseRule").click(function(e) {
-		var site = $("#site").val();
-		$("#site").val(JSON.stringify(JSON.parse(site), null, 4));
-		var collection = $("#collection").val();
-		$("#collection").val(JSON.stringify(JSON.parse(collection), null, 4));
+ 		try { 
+ 			var site = $("#site").val();
+ 			$("#site").val(JSON.stringify(JSON.parse(site), null, 4));
+ 			var collection = $("#collection").val();
+ 			$("#collection").val(JSON.stringify(JSON.parse(collection), null, 4));
+		} catch (e) {
+			alert(e.message);
+		} 
     });
 	
 	$("#btnGenerateQrCode").click(function(e) {
@@ -40,7 +44,11 @@ $(document).ready(function(e) {
 				 	},
 		     dataType: "json",
 		     success: function(result){
-				 $("#display").val(JSON.stringify(result, null, 4));
+		 		try { 
+					$("#display").val(JSON.stringify(result, null, 4));
+		 		} catch (e) {
+		 			$("#display").val(e.message);
+		 		} 
 		    },
 			error:function(xhr){
 				 $("#display").val(xhr);
