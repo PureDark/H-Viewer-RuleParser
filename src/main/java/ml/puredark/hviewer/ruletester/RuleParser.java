@@ -106,14 +106,14 @@ public class RuleParser {
             String dateStr = matchResult.get("date");
             int index = dateStr.lastIndexOf(':');
             String firstParam = dateStr.substring(0, index);
-            String lastParam = dateStr.substring(index+1);
+            String lastParam = dateStr.substring(index + 1);
             Calendar calendar = Calendar.getInstance();
             SimpleDateFormat dateFormat;
-            try{
+            try {
                 int offset = Integer.parseInt(lastParam);
                 dateFormat = new SimpleDateFormat(firstParam);
                 calendar.add(Calendar.DAY_OF_MONTH, offset);
-            } catch (NumberFormatException e){
+            } catch (NumberFormatException e) {
                 dateFormat = new SimpleDateFormat(dateStr);
             }
             String currDate = dateFormat.format(calendar.getTime());
@@ -123,14 +123,14 @@ public class RuleParser {
             String timeStr = matchResult.get("time");
             int index = timeStr.lastIndexOf(':');
             String firstParam = timeStr.substring(0, index);
-            String lastParam = timeStr.substring(index+1);
+            String lastParam = timeStr.substring(index + 1);
             Calendar calendar = Calendar.getInstance();
             SimpleDateFormat dateFormat;
-            try{
+            try {
                 int offset = Integer.parseInt(lastParam);
                 dateFormat = new SimpleDateFormat(firstParam);
                 calendar.add(Calendar.SECOND, offset);
-            } catch (NumberFormatException e){
+            } catch (NumberFormatException e) {
                 dateFormat = new SimpleDateFormat(timeStr);
             }
             String currTime = dateFormat.format(calendar.getTime());
@@ -146,116 +146,124 @@ public class RuleParser {
         return string.startsWith("{") || string.startsWith("[");
     }
 
-    public static List<Collection> getCollections(List<Collection> collections, String text, Rule rule, String sourceUrl) throws Exception {
+    public static JsonArray getJsonArray(ReadContext ctx, String jsonPaths) {
+        JsonArray items = new JsonArray();
+        String[] paths = jsonPaths.split(",");
+        for (int i = 0; i < paths.length; i++) {
+            JsonElement element;
+            try {
+                element = ctx.read(paths[i], JsonElement.class);
+            } catch (Exception e) {
+                //e.printStackTrace();
+                try {
+                    if (paths.length > i + 1) {
+                        element = ctx.read(paths[i] + paths[i + 1], JsonElement.class);
+                        i++;
+                    } else
+                        continue;
+                } catch (Exception e1) {
+                    //e.printStackTrace();
+                    continue;
+                }
+            }
+            if (element instanceof JsonArray)
+                items.addAll(element.getAsJsonArray());
+            else {
+                items.add(element);
+            }
+        }
+        return items;
+    }
+
+    public static List<Collection> getCollections(List<Collection> collections, String text, Rule rule, String sourceUrl) {
         return getCollections(collections, text, rule, sourceUrl, false);
     }
 
-    public static List<Collection> getCollections(List<Collection> collections, String text, Rule rule, String sourceUrl, boolean noRegex) throws Exception {
-        Iterable items;
-        if (!isJson(text)) {
-            Document doc = Jsoup.parse(text);
-            items = doc.select(rule.item.selector);
-            for (Object item : items) {
-                String itemStr;
-                if (item instanceof Element) {
-                    if ("attr".equals(rule.item.fun))
-                        itemStr = ((Element) item).attr(rule.title.param);
-                    else if ("html".equals(rule.item.fun))
-                        itemStr = ((Element) item).html();
-                    else if ("text".equals(rule.item.fun))
-                        itemStr = ((Element) item).text();
-                    else
+    public static List<Collection> getCollections(List<Collection> collections, String text, Rule rule, String sourceUrl, boolean noRegex) {
+        try {
+            Iterable items;
+            if (!isJson(text)) {
+                Document doc = Jsoup.parse(text);
+                items = doc.select(rule.item.selector);
+                for (Object item : items) {
+                    String itemStr;
+                    if (item instanceof Element) {
+                        if ("attr".equals(rule.item.fun))
+                            itemStr = ((Element) item).attr(rule.title.param);
+                        else if ("html".equals(rule.item.fun))
+                            itemStr = ((Element) item).html();
+                        else if ("text".equals(rule.item.fun))
+                            itemStr = ((Element) item).text();
+                        else
+                            itemStr = item.toString();
+                    } else
+                        continue;
+                    if (!noRegex && rule.item.regex != null) {
+                        Pattern pattern = Pattern.compile(rule.item.regex);
+                        Matcher matcher = pattern.matcher(itemStr);
+                        Logger.d("RuleParser", "beforeMatch");
+                        if (!matcher.find()) {
+                            continue;
+                        } else if (matcher.groupCount() >= 1) {
+                            Logger.d("RuleParser", "matcher.groupCount() >= 1");
+                            if (rule.item.replacement != null) {
+                                itemStr = rule.item.replacement;
+                                for (int i = 1; i <= matcher.groupCount(); i++) {
+                                    String replace = matcher.group(i);
+                                    itemStr = itemStr.replaceAll("\\$" + i, (replace != null) ? replace : "");
+                                }
+                            } else {
+                                itemStr = matcher.group(1);
+                            }
+                        }
+                    }
+                    if (rule.item.path != null && isJson(itemStr)) {
+                        Logger.d("RuleParser", "isJson : true");
+                        collections = getCollections(collections, itemStr, rule, sourceUrl, true);
+                    } else {
+                        Collection collection = new Collection(collections.size() + 1);
+                        collection = getCollectionDetail(collection, item, rule, sourceUrl);
+                        collections.add(collection);
+                    }
+                }
+            } else {
+                ReadContext ctx = JsonPath.parse(text);
+                items = getJsonArray(ctx, rule.item.path);
+                Logger.d("RuleParser", items.toString());
+                for (Object item : items) {
+                    String itemStr;
+                    if (item instanceof JsonElement)
                         itemStr = item.toString();
-                } else
-                    continue;
-                if (!noRegex && rule.item.regex != null) {
-                    Pattern pattern = Pattern.compile(rule.item.regex);
-                    Matcher matcher = pattern.matcher(itemStr);
-                    Logger.d("RuleParser", "beforeMatch");
-                    if (!matcher.find()) {
+                    else
                         continue;
-                    } else if (matcher.groupCount() >= 1) {
-                        Logger.d("RuleParser", "matcher.groupCount() >= 1");
-                        if (rule.item.replacement != null) {
-                            itemStr = rule.item.replacement;
-                            for (int i = 1; i <= matcher.groupCount(); i++) {
-                                String replace = matcher.group(i);
-                                itemStr = itemStr.replaceAll("\\$" + i, (replace != null) ? replace : "");
+                    if (!noRegex && rule.item.regex != null) {
+                        Pattern pattern = Pattern.compile(rule.item.regex);
+                        Matcher matcher = pattern.matcher(itemStr);
+                        if (!matcher.find()) {
+                            continue;
+                        } else if (matcher.groupCount() >= 1) {
+                            if (rule.item.replacement != null) {
+                                itemStr = rule.item.replacement;
+                                for (int i = 1; i <= matcher.groupCount(); i++) {
+                                    String replace = matcher.group(i);
+                                    itemStr = itemStr.replaceAll("\\$" + i, (replace != null) ? replace : "");
+                                }
+                            } else {
+                                itemStr = matcher.group(1);
                             }
-                        } else {
-                            itemStr = matcher.group(1);
                         }
                     }
-                }
-                if (rule.item.path != null && isJson(itemStr)) {
-                    Logger.d("RuleParser", "isJson : true");
-                    collections = getCollections(collections, itemStr, rule, sourceUrl, true);
-                } else {
-                    Collection collection = new Collection(collections.size() + 1);
-                    collection = getCollectionDetail(collection, item, rule, sourceUrl);
-                    collections.add(collection);
-                }
-            }
-        } else {
-            items = new JsonArray();
-            ReadContext ctx = JsonPath.parse(text);
-            String[] paths = rule.item.path.split(",");
-            for (int i = 0; i < paths.length; i++) {
-                JsonElement element;
-                try {
-                    element = ctx.read(paths[i], JsonElement.class);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    try {
-                        if (paths.length > i + 1) {
-                            element = ctx.read(paths[i] + paths[i + 1], JsonElement.class);
-                            i++;
-                        }else
-                            break;
-                    } catch (Exception e1) {
-                        e.printStackTrace();
-                        break;
+                    if (rule.item.selector != null && !isJson(itemStr)) {
+                        collections = getCollections(collections, itemStr, rule, sourceUrl, true);
+                    } else {
+                        Collection collection = new Collection(collections.size() + 1);
+                        collection = getCollectionDetail(collection, item, rule, sourceUrl);
+                        collections.add(collection);
                     }
                 }
-                if (element instanceof JsonArray)
-                    ((JsonArray) items).addAll(element.getAsJsonArray());
-                else {
-                    items = new JsonArray();
-                    ((JsonArray) items).add(element);
-                }
             }
-            Logger.d("RuleParser", items.toString());
-            for (Object item : items) {
-                String itemStr;
-                if (item instanceof JsonElement)
-                    itemStr = item.toString();
-                else
-                    continue;
-                if (!noRegex && rule.item.regex != null) {
-                    Pattern pattern = Pattern.compile(rule.item.regex);
-                    Matcher matcher = pattern.matcher(itemStr);
-                    if (!matcher.find()) {
-                        continue;
-                    } else if (matcher.groupCount() >= 1) {
-                        if (rule.item.replacement != null) {
-                            itemStr = rule.item.replacement;
-                            for (int i = 1; i <= matcher.groupCount(); i++) {
-                                String replace = matcher.group(i);
-                                itemStr = itemStr.replaceAll("\\$" + i, (replace != null) ? replace : "");
-                            }
-                        } else {
-                            itemStr = matcher.group(1);
-                        }
-                    }
-                }
-                if (rule.item.selector != null && !isJson(itemStr)) {
-                    collections = getCollections(collections, itemStr, rule, sourceUrl, true);
-                } else {
-                    Collection collection = new Collection(collections.size() + 1);
-                    collection = getCollectionDetail(collection, item, rule, sourceUrl);
-                    collections.add(collection);
-                }
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return collections;
     }
@@ -298,6 +306,7 @@ public class RuleParser {
         String datetime = parseSingleProperty(source, rule.datetime, sourceUrl, false);
 
         String description = parseSingleProperty(source, rule.description, sourceUrl, false);
+
         if (source instanceof Element) {
             try {
                 Element element = Jsoup.parse(description);
@@ -334,13 +343,7 @@ public class RuleParser {
                 temp = ((Element) source).select(rule.tagRule.item.selector);
             else if (source instanceof JsonElement) {
                 ReadContext ctx = JsonPath.parse(source.toString());
-                JsonElement element = ctx.read(rule.tagRule.item.path, JsonElement.class);
-                if (element instanceof JsonArray)
-                    temp = element.getAsJsonArray();
-                else {
-                    temp = new JsonArray();
-                    ((JsonArray) temp).add(element);
-                }
+                temp = getJsonArray(ctx, rule.tagRule.item.path);
             } else
                 return collection;
             for (Object element : temp) {
@@ -388,13 +391,7 @@ public class RuleParser {
                     temp = ((Element) source).select(pictureItem.selector);
                 else if (source instanceof JsonElement) {
                     ReadContext ctx = JsonPath.parse(source.toString());
-                    JsonElement element = ctx.read(pictureItem.path, JsonElement.class);
-                    if (element instanceof JsonArray)
-                        temp = element.getAsJsonArray();
-                    else {
-                        temp = new JsonArray();
-                        ((JsonArray) temp).add(element);
-                    }
+                    temp = getJsonArray(ctx, pictureItem.path);
                 } else
                     return collection;
                 for (Object element : temp) {
@@ -447,13 +444,7 @@ public class RuleParser {
                 temp = ((Element) source).select(rule.videoRule.item.selector);
             else if (source instanceof JsonElement) {
                 ReadContext ctx = JsonPath.parse(source.toString());
-                JsonElement element = ctx.read(rule.videoRule.item.path, JsonElement.class);
-                if (element instanceof JsonArray)
-                    temp = element.getAsJsonArray();
-                else {
-                    temp = new JsonArray();
-                    ((JsonArray) temp).add(element);
-                }
+                temp = getJsonArray(ctx, rule.videoRule.item.path);
             } else
                 return collection;
             for (Object element : temp) {
@@ -500,13 +491,7 @@ public class RuleParser {
                 temp = ((Element) source).select(commentItem.selector);
             } else if (source instanceof JsonElement) {
                 ReadContext ctx = JsonPath.parse(source.toString());
-                JsonElement element = ctx.read(commentItem.path, JsonElement.class);
-                if (element instanceof JsonArray)
-                    temp = element.getAsJsonArray();
-                else {
-                    temp = new JsonArray();
-                    ((JsonArray) temp).add(element);
-                }
+                temp = getJsonArray(ctx, commentItem.path);
             } else
                 return collection;
             for (Object element : temp) {
@@ -573,7 +558,7 @@ public class RuleParser {
                             prop = elem.attr(selector.param);
                         } else if ("html".equals(selector.fun)) {
                             prop = elem.html();
-                        } else if ("text".equals(selector.fun)){
+                        } else if ("text".equals(selector.fun)) {
                             prop = elem.text();
                         } else {
                             prop = elem.toString();
@@ -587,15 +572,19 @@ public class RuleParser {
                         try {
                             for (int i = 0; i < props.size(); i++) {
                                 prop = props.get(i);
-                                Object tempItem = JsonPath.parse(prop).read(selector.path);
-                                if (tempItem instanceof JsonPrimitive)
-                                    prop = ((JsonPrimitive) tempItem).getAsString();
-                                else
-                                    prop = tempItem.toString();
-                                if (!TextUtils.isEmpty(prop)) {
-                                    if (isUrl)
-                                        prop = RegexValidateUtil.getAbsoluteUrlFromRelative(prop, sourceUrl);
-                                    props.set(i, prop);
+                                ReadContext ctx = JsonPath.parse(prop);
+                                JsonArray tempArray = getJsonArray(ctx, selector.path);
+                                if (tempArray.size() > 0) {
+                                    JsonElement tempItem = tempArray.get(0);
+                                    if (tempItem instanceof JsonPrimitive)
+                                        prop = tempItem.getAsString();
+                                    else
+                                        prop = tempItem.toString();
+                                    if (!TextUtils.isEmpty(prop)) {
+                                        if (isUrl)
+                                            prop = RegexValidateUtil.getAbsoluteUrlFromRelative(prop, sourceUrl);
+                                        props.set(i, prop);
+                                    }
                                 }
                             }
                         } catch (Exception e) {
@@ -605,16 +594,7 @@ public class RuleParser {
                 }
             } else if (source instanceof JsonElement) {
                 ReadContext ctx = JsonPath.parse(source.toString());
-                Iterable<JsonElement> temp = new ArrayList<>();
-                try {
-                    JsonElement elem = ctx.read(selector.path);
-                    if (elem instanceof JsonArray)
-                        temp = (JsonArray) elem;
-                    else
-                        ((List) temp).add(elem);
-                } catch (PathNotFoundException e) {
-                }
-
+                JsonArray temp = getJsonArray(ctx, selector.path);
                 if (temp != null) {
                     for (JsonElement item : temp) {
                         if (item instanceof JsonPrimitive)
@@ -694,6 +674,24 @@ public class RuleParser {
             e.printStackTrace();
             return "";
         }
+    }
+
+    public static List<String> getVideoUrl(String html, String sourceUrl) {
+        List<String> videoUrls = new ArrayList<>();
+        try {
+            Pattern p = Pattern.compile("https?[^\"'<>]*?[^\"'<>]+?\\.(?:mp4|flv)[^\"'<>]*", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = p.matcher(html);
+            while (matcher.find()) {
+                String videoUrl = matcher.group();
+                if (TextUtils.isEmpty(videoUrl))
+                    continue;
+                videoUrl = RegexValidateUtil.getAbsoluteUrlFromRelative(videoUrl, sourceUrl);
+                videoUrls.add(videoUrl);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return videoUrls;
     }
 
 }
