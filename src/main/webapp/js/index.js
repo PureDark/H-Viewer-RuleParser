@@ -10,6 +10,25 @@ $(document).ready(function(e) {
 		} 
     });
 	
+	$("#btnParseUrl").click(function(e) {
+		var paramUrl = $("#paramUrl").val();
+        $.ajax({
+		     type: "POST",
+		     url: "servlet/RuleTester",
+			 data: {
+				 	action: 'getGeneratedIndexUrl',
+				 	paramUrl: paramUrl
+			 },
+		     dataType: "text",
+		     success: function(result){
+		 		$("#targetUrl").val(result);
+		    },
+			error:function(xhr){
+				alert("网址生成失败")
+			}
+		});
+    });
+	
 	$("#btnGenerateQrCode").click(function(e) {
 		var site = $("#site").val();
         $.ajax({

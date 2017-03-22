@@ -98,7 +98,7 @@ public class RuleTesterServlet extends HttpServlet {
 				}
 			}else if("getDetail".equals(action)){
 				String collectionJson = request.getParameter("collection");
-				if(!TextUtils.isEmpty(collectionJson) && !TextUtils.isEmpty(collectionJson)){
+				if(!TextUtils.isEmpty(siteJson) && !TextUtils.isEmpty(collectionJson)){
 					Gson gson = new Gson();
 					Site site = gson.fromJson(siteJson, Site.class);
 					Collection collection = gson.fromJson(collectionJson, Collection.class);
@@ -107,7 +107,6 @@ public class RuleTesterServlet extends HttpServlet {
 					out.println(output);
 				}
 			}else if("generateQrCode".equals(action)){
-	
 		        RequestBody requestBody = new FormBody.Builder()
 		                .add("key", PasteEEConfig.appkey)
 		                .add("description", "")
@@ -135,6 +134,24 @@ public class RuleTesterServlet extends HttpServlet {
 					Site site = gson.fromJson(siteJson, Site.class);
 					String html = HViewerHttpClient.get(targetUrl, site.cookie);
 					out.println(html);
+				}
+			}else if("getGeneratedIndexUrl".equals(action)){
+				String paramUrl = request.getParameter("paramUrl");
+	            Logger.d("doPost", "paramUrl:"+paramUrl);
+				if(!TextUtils.isEmpty(paramUrl)){
+					String generatedUrl = RuleParser.parseUrl(paramUrl, 0, null, null, null);
+					out.println(generatedUrl);
+				}
+			}else if("getGeneratedGalleryUrl".equals(action)){
+				String paramUrl = request.getParameter("paramUrl");
+				String collectionJson = request.getParameter("collection");
+	            Logger.d("doPost", "paramUrl:" + paramUrl);
+				if(!TextUtils.isEmpty(paramUrl) && !TextUtils.isEmpty(collectionJson)){
+					Gson gson = new Gson();
+					Collection collection = gson.fromJson(collectionJson, Collection.class);
+					Object[] objs = (collection.pictures!=null)? collection.pictures.toArray() : null;
+					String generatedUrl = RuleParser.parseUrl(paramUrl, 0, collection.idCode, null, objs);
+					out.println(generatedUrl);
 				}
 			}else{
 				out.println("no action");
