@@ -41,7 +41,16 @@ public class HViewerHttpClient {
             Response response = mClient.newCall(request).execute();
             String contentType = response.header("Content-Type");
             String body = null;
-            if (contentType == null || !contentType.contains("image")) {
+            if (contentType != null && contentType.contains("image")) {
+                //不经过图片加载库容易导致OOM，宁愿重新加载一次
+                //body = BitmapFactory.decodeStream(response.body().byteStream());
+                body = null;
+            } else if(contentType != null && contentType.contains("charset")){
+                byte[] b = response.body().bytes();
+                String charset = matchCharset(contentType);
+                body = new String(b, charset);
+            }
+            else {
                 byte[] b = response.body().bytes();
                 String charset = getCharset(new String(b));
                 body = new String(b, charset);
@@ -83,7 +92,16 @@ public class HViewerHttpClient {
             Response response = mClient.newCall(request).execute();
             String contentType = response.header("Content-Type");
             String body = null;
-            if (contentType == null || !contentType.contains("image")) {
+            if (contentType != null && contentType.contains("image")) {
+                //不经过图片加载库容易导致OOM，宁愿重新加载一次
+                //body = BitmapFactory.decodeStream(response.body().byteStream());
+                body = null;
+            } else if(contentType != null && contentType.contains("charset")){
+                byte[] b = response.body().bytes();
+                String charset = matchCharset(contentType);
+                body = new String(b, charset);
+            }
+            else {
                 byte[] b = response.body().bytes();
                 String charset = getCharset(new String(b));
                 body = new String(b, charset);
@@ -97,11 +115,11 @@ public class HViewerHttpClient {
     }
 
     /**
-     * 获得字符编码
+     * 获得字符集
      */
     public static String getCharset(String html) {
         Document doc = Jsoup.parse(html);
-        Elements eles = doc.select("meta[http-equiv=Content-Type]");
+        Elements eles = doc.select("meta[http-equiv=Content-Type],meta[charset]");
         Iterator<Element> itor = eles.iterator();
         while (itor.hasNext())
             return matchCharset(itor.next().toString());
@@ -113,10 +131,10 @@ public class HViewerHttpClient {
      */
     public static String matchCharset(String content) {
         String chs = "utf-8";
-        Pattern p = Pattern.compile("(?<=charset=)(.+)(?=\")");
+        Pattern p = Pattern.compile("charset.*?([\\w-]+)");
         Matcher m = p.matcher(content);
-        if (m.find())
-            return m.group();
+        if (m.find() && m.groupCount()>0)
+            return m.group(1);
         return chs;
     }
 
