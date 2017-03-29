@@ -669,32 +669,32 @@ public class RuleParser {
                 ReadContext ctx = JsonPath.parse(source.toString());
                 JsonArray temp = getJsonArray(ctx, selector.path);
                 if (temp != null) {
+                    boolean doDocument = !TextUtils.isEmpty(selector.selector);
                     for (JsonElement item : temp) {
                         if (item instanceof JsonPrimitive)
                             prop = item.getAsString();
                         else
                             prop = item.toString();
-                        if (!TextUtils.isEmpty(selector.selector)) {
+                        if (doDocument) {
                             try {
-                                String newProp;
                                 Elements element = ("this".equals(selector.selector)) ? new Elements(Jsoup.parse(prop)) : Jsoup.parse(prop).select(selector.selector);
                                 if ("attr".equals(selector.fun)) {
-                                    newProp = element.attr(selector.param);
+                                    prop = element.attr(selector.param);
                                 } else if ("html".equals(selector.fun)) {
-                                    newProp = element.html();
+                                    prop = element.html();
                                 } else if ("text".equals(selector.fun)) {
-                                    newProp = element.text();
+                                    prop = element.text();
                                 } else {
-                                    newProp = element.toString();
+                                    prop = element.toString();
                                 }
-                                if (!TextUtils.isEmpty(newProp))
-                                    prop = newProp;
+                                if (!TextUtils.isEmpty(prop))
+                                    props = getPropertyAfterRegex(props, prop, selector, sourceUrl, isUrl);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                        }
-                        if (!TextUtils.isEmpty(prop) && !"null".equals(prop.trim()))
+                        } else if (!TextUtils.isEmpty(prop) && !"null".equals(prop.trim())) {
                             props = getPropertyAfterRegex(props, prop, selector, sourceUrl, isUrl);
+                        }
                     }
                 }
             }
