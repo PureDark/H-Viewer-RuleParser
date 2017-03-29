@@ -1,7 +1,5 @@
 package ml.puredark.hviewer.ruletester.http;
 
-import ml.puredark.hviewer.ruletester.utils.RegexValidateUtil;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -9,12 +7,10 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import okhttp3.Cookie;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -36,8 +32,7 @@ public class HViewerHttpClient {
         if (cookies != null) {
             builder.addHeader("Cookie", cookies);
         }
-        String referer = RegexValidateUtil.getCurrDirFromUrl(url);
-        builder.addHeader("Referer", referer);
+        builder.addHeader("X-Requested-With", "XMLHttpRequest");
         Request request = builder
                 .url(url)
                 .build();
@@ -88,8 +83,7 @@ public class HViewerHttpClient {
         if (cookies != null) {
             builder.addHeader("cookie", cookies);
         }
-        String referer = RegexValidateUtil.getCurrDirFromUrl(url);
-        builder.addHeader("Referer", referer);
+        builder.addHeader("X-Requested-With", "XMLHttpRequest");
         Request request = builder
                 .url(url)
                 .post(requestBody)
