@@ -7,6 +7,9 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,16 +26,17 @@ public class HViewerHttpClient {
                                                 .readTimeout(60, TimeUnit.SECONDS)
                                                 .build();
 
-    public static String get(String url, String cookies){
+    public static String get(String url, Map<String, String> headers){
         if (url == null || !url.startsWith("http")) {
             Logger.d("HViewerHttpClient", "url = "+url);
             return null;
         }
         HRequestBuilder builder = new HRequestBuilder();
-        if (cookies != null) {
-            builder.addHeader("Cookie", cookies);
+        if (headers != null) {
+            for (Entry<String, String> header : headers.entrySet()) {  
+                builder.addHeader(header.getKey(), header.getValue());
+            }  
         }
-        builder.addHeader("X-Requested-With", "XMLHttpRequest");
         Request request = builder
                 .url(url)
                 .build();
@@ -62,7 +66,7 @@ public class HViewerHttpClient {
         return null;
     }
 
-    public static String post(String url, String paramsString, String cookies) {
+    public static String post(String url, String paramsString, Map<String, String> headers) {
         String[] paramStrings = paramsString.split("&");
         FormBody.Builder formBody = new FormBody.Builder();
         for (String paramString : paramStrings) {
@@ -71,19 +75,20 @@ public class HViewerHttpClient {
             formBody.add(pram[0], pram[1]);
         }
         RequestBody requestBody = formBody.build();
-        return post(url, requestBody, cookies);
+        return post(url, requestBody, headers);
     }
     
-    public static String post(String url, RequestBody requestBody, String cookies){
+    public static String post(String url, RequestBody requestBody, Map<String, String> headers){
         if (url == null || !url.startsWith("http")) {
             Logger.d("HViewerHttpClient", "url = "+url);
             return null;
         }
         HRequestBuilder builder = new HRequestBuilder();
-        if (cookies != null) {
-            builder.addHeader("cookie", cookies);
+        if (headers != null) {
+            for (Entry<String, String> header : headers.entrySet()) {  
+                builder.addHeader(header.getKey(), header.getValue());
+            }  
         }
-        builder.addHeader("X-Requested-With", "XMLHttpRequest");
         Request request = builder
                 .url(url)
                 .post(requestBody)

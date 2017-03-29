@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -132,7 +133,7 @@ public class RuleTesterServlet extends HttpServlet {
 				if(!TextUtils.isEmpty(siteJson) && !TextUtils.isEmpty(targetUrl)){
 					Gson gson = new Gson();
 					Site site = gson.fromJson(siteJson, Site.class);
-					String html = HViewerHttpClient.get(targetUrl, site.cookie);
+					String html = HViewerHttpClient.get(targetUrl, site.getHeaders());
 					out.println(html);
 				}
 			}else if("getGeneratedIndexUrl".equals(action)){
@@ -172,14 +173,14 @@ public class RuleTesterServlet extends HttpServlet {
         String html = "";
         if (site.hasFlag(Site.FLAG_JS_NEEDED_ALL) || site.hasFlag(Site.FLAG_JS_NEEDED_INDEX)){
             Logger.d("getCollections", "browser");
-        	html = getHtmlWithBrowser(targetUrl, site.cookie);
+        	html = getHtmlWithBrowser(targetUrl, site.getHeaders());
         }else if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
             String params = (url == null) ? "" : url.substring(url.indexOf('?'));
             Logger.d("getCollections", "post");
-        	html = HViewerHttpClient.post(url, params, site.cookie);
+        	html = HViewerHttpClient.post(url, params, site.getHeaders());
         }else {
             Logger.d("getCollections", "get");
-        	html = HViewerHttpClient.get(url, site.cookie);
+        	html = HViewerHttpClient.get(url, site.getHeaders());
         }
         Logger.d("getCollections", "result:"+html);
         List<Collection> collections = new ArrayList<Collection>();
@@ -193,21 +194,19 @@ public class RuleTesterServlet extends HttpServlet {
         String html = "";
         if (site.hasFlag(Site.FLAG_JS_NEEDED_ALL) || site.hasFlag(Site.FLAG_JS_NEEDED_GALLERY)){
             Logger.d("getCollections", "browser");
-        	html = getHtmlWithBrowser(url, site.cookie);
+        	html = getHtmlWithBrowser(url, site.getHeaders());
         }else if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
             String params = (url == null) ? "" : url.substring(url.indexOf('?'));
-        	html = HViewerHttpClient.post(url, params, site.cookie);
+        	html = HViewerHttpClient.post(url, params, site.getHeaders());
         }else {
-        	html = HViewerHttpClient.get(url, site.cookie);
+        	html = HViewerHttpClient.get(url, site.getHeaders());
         }
         Logger.d("getCollectionDetail", html);
         collection = RuleParser.getCollectionDetail(collection, html, site.galleryRule, url);
         return collection;
     }
 	
-	private String getHtmlWithBrowser(String url, String cookie){
-		LinkedHashMap<String, String> headers = new LinkedHashMap<String, String>();
-		headers.put("cookie", cookie);
+	private String getHtmlWithBrowser(String url, LinkedHashMap<String, String> headers){
 		
 	    JBrowserDriver driver = new JBrowserDriver(
 	    		Settings.builder()

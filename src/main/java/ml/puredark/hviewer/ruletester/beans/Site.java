@@ -1,9 +1,12 @@
 package ml.puredark.hviewer.ruletester.beans;
 
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ml.puredark.hviewer.ruletester.RuleParser;
+import ml.puredark.hviewer.ruletester.TextUtils;
 
 
 public class Site  {
@@ -44,6 +47,7 @@ public class Site  {
     public Selector picUrlSelector;
 
     public String cookie = "";
+    public String header = "";
     public String flag = "";
     public int index;
 
@@ -65,6 +69,20 @@ public class Site  {
         this.flag = flag;
     }
    
+
+    public LinkedHashMap<String, String> getHeaders() {
+    	LinkedHashMap<String, String> headers = new LinkedHashMap<>();
+        if (!TextUtils.isEmpty(cookie))
+            headers.put("Cookie", cookie);
+        if (!TextUtils.isEmpty(header)) {
+            Pattern pattern = Pattern.compile("([^\\r\\n]*?):([^\\r\\n]*)", Pattern.DOTALL);
+            Matcher matcher = pattern.matcher(header);
+            while (matcher.find() && matcher.groupCount() == 2) {
+                headers.put(matcher.group(1), matcher.group(2));
+            }
+        }
+        return headers;
+    }
 
     public boolean hasFlag(String flag) {
         if (this.flag == null)
