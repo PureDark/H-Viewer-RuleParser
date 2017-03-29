@@ -354,12 +354,15 @@ public class RuleParser {
 
         List<Tag> tags = new ArrayList<>();
         if (rule.tagRule != null && rule.tagRule.item != null) {
-            temp = parseSinglePropertyMatchAll(source, rule.tagRule.item, sourceUrl, false);
+            temp = parseItemMatchAll(source, rule.tagRule.item, sourceUrl);
             for (Object element : temp) {
-                if(isJson(element.toString()))
-                    element = jsonParser.parse(element.toString());
-                else
-                    element = Jsoup.parse(element.toString()).body().child(0);
+                if (rule.tagRule.item.regex != null) {
+                    Pattern pattern = Pattern.compile(rule.tagRule.item.regex);
+                    Matcher matcher = pattern.matcher(element.toString());
+                    if (!matcher.find()) {
+                        continue;
+                    }
+                }
                 String tagTitle = parseSingleProperty(element, rule.tagRule.title, sourceUrl, false);
                 String tagUrl = parseSingleProperty(element, rule.tagRule.url, sourceUrl, true);
                 if (TextUtils.isEmpty(tagUrl))
@@ -393,12 +396,19 @@ public class RuleParser {
 
         if (pictureUrl != null && pictureThumbnail != null) {
             if (pictureItem != null) {
-                temp = parseSinglePropertyMatchAll(source, pictureItem, sourceUrl, false);
+                temp = parseItemMatchAll(source, pictureItem, sourceUrl);
                 for (Object element : temp) {
+                    if (pictureItem.regex != null) {
+                        Pattern pattern = Pattern.compile(pictureItem.regex);
+                        Matcher matcher = pattern.matcher(element.toString());
+                        if (!matcher.find()) {
+                            continue;
+                        }
+                    }
                     if(isJson(element.toString()))
                         element = jsonParser.parse(element.toString());
                     else
-                        element = Jsoup.parse(element.toString()).body().child(0);
+                        element = Jsoup.parse(element.toString());
                     String pId = parseSingleProperty(element, pictureId, sourceUrl, false);
                     int pid;
                     try {
@@ -437,12 +447,19 @@ public class RuleParser {
 
         List<Video> videos = new ArrayList<>();
         if (rule.videoRule != null && rule.videoRule.item != null) {
-            temp = parseSinglePropertyMatchAll(source, rule.videoRule.item, sourceUrl, false);
+            temp = parseItemMatchAll(source, rule.videoRule.item, sourceUrl);
             for (Object element : temp) {
+                if (rule.videoRule.item.regex != null) {
+                    Pattern pattern = Pattern.compile(rule.videoRule.item.regex);
+                    Matcher matcher = pattern.matcher(element.toString());
+                    if (!matcher.find()) {
+                        continue;
+                    }
+                }
                 if(isJson(element.toString()))
                     element = jsonParser.parse(element.toString());
                 else
-                    element = Jsoup.parse(element.toString()).body().child(0);
+                    element = Jsoup.parse(element.toString());
                 String vId = parseSingleProperty(element, rule.videoRule.id, sourceUrl, false);
                 int vid;
                 try {
@@ -475,12 +492,15 @@ public class RuleParser {
             commentContent = rule.commentContent;
         }
         if (commentItem != null && commentContent != null) {
-            temp = parseSinglePropertyMatchAll(source, commentItem, sourceUrl, false);
+            temp = parseItemMatchAll(source, commentItem, sourceUrl);
             for (Object element : temp) {
-                if(isJson(element.toString()))
-                    element = jsonParser.parse(element.toString());
-                else
-                    element = Jsoup.parse(element.toString());
+                if (commentItem.regex != null) {
+                    Pattern pattern = Pattern.compile(commentItem.regex);
+                    Matcher matcher = pattern.matcher(element.toString());
+                    if (!matcher.find()) {
+                        continue;
+                    }
+                }
                 String cAvatar = parseSingleProperty(element, commentAvatar, sourceUrl, false);
                 String cAuthor = parseSingleProperty(element, commentAuthor, sourceUrl, false);
                 String cDatetime = parseSingleProperty(element, commentDatetime, sourceUrl, false);
@@ -516,6 +536,80 @@ public class RuleParser {
         if (comments != null && comments.size() > 0)
             collection.comments = comments;
         return collection;
+    }
+
+    public static List<Object> parseItemMatchAll(Object source, Selector selector, String sourceUrl) throws Exception {
+        List<Object> items = new ArrayList<>();
+
+        if (selector != null) {
+            String prop;
+            if (source instanceof Element) {
+                Elements temp = ("this".equals(selector.selector)) ? new Elements((Element) source) : ((Element) source).select(selector.selector);
+                if (temp != null) {
+                    boolean doJsonParse = !TextUtils.isEmpty(selector.path);
+                    for (Element elem : temp) {
+                        if(doJsonParse){
+                            if ("attr".equals(selector.fun)) {
+                                prop = elem.attr(selector.param);
+                            } else if ("html".equals(selector.fun)) {
+                                prop = elem.html();
+                            } else if ("text".equals(selector.fun)) {
+                                prop = elem.text();
+                            } else {
+                                prop = elem.toString();
+                            }
+                            List<String> props = getPropertyAfterRegex(new ArrayList<String>(), prop, selector, sourceUrl, false);
+                            for(String string : props){
+                                ReadContext ctx = JsonPath.parse(string);
+                                JsonArray jsonArray = getJsonArray(ctx, selector.path);
+                                for(JsonElement jsonElem : jsonArray){
+                                    items.add(jsonElem);
+                                }
+                            }
+                        } else {
+                            if (selector.regex != null) {
+                                Pattern pattern = Pattern.compile(selector.regex);
+                                Matcher matcher = pattern.matcher(elem.toString());
+                                if (!matcher.find()) {
+                                    continue;
+                                }
+                            }
+                            items.add(elem);
+                        }
+                    }
+                }
+            } else if (source instanceof JsonElement) {
+                ReadContext ctx = JsonPath.parse(source.toString());
+                JsonArray temp = getJsonArray(ctx, selector.path);
+                if (temp != null) {
+                    boolean doDocument = !TextUtils.isEmpty(selector.selector);
+                    for (JsonElement item : temp) {
+                        if (doDocument) {
+                            try {
+                                if (item instanceof JsonPrimitive)
+                                    prop = item.getAsString();
+                                else
+                                    continue;
+                                Elements elements = ("this".equals(selector.selector)) ? new Elements(Jsoup.parse(prop)) : Jsoup.parse(prop).select(selector.selector);
+                                items.addAll(elements);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        } else{
+                            if (selector.regex != null) {
+                                Pattern pattern = Pattern.compile(selector.regex);
+                                Matcher matcher = pattern.matcher(item.toString());
+                                if (!matcher.find()) {
+                                    continue;
+                                }
+                            }
+                            items.add(item);
+                        }
+                    }
+                }
+            }
+        }
+        return items;
     }
 
     public static String parseSingleProperty(Object source, Selector selector, String sourceUrl, boolean isUrl) throws Exception {
@@ -582,24 +676,25 @@ public class RuleParser {
                             prop = item.toString();
                         if (!TextUtils.isEmpty(selector.selector)) {
                             try {
+                                String newProp;
                                 Elements element = ("this".equals(selector.selector)) ? new Elements(Jsoup.parse(prop)) : Jsoup.parse(prop).select(selector.selector);
                                 if ("attr".equals(selector.fun)) {
-                                	prop = element.attr(selector.param);
+                                    newProp = element.attr(selector.param);
                                 } else if ("html".equals(selector.fun)) {
-                                	prop = element.html();
+                                    newProp = element.html();
                                 } else if ("text".equals(selector.fun)) {
-                                	prop = element.text();
+                                    newProp = element.text();
                                 } else {
-                                	prop = element.toString();
+                                    newProp = element.toString();
                                 }
-                                if (!TextUtils.isEmpty(prop))
-                                	props = getPropertyAfterRegex(props, prop, selector, sourceUrl, isUrl);
+                                if (!TextUtils.isEmpty(newProp))
+                                    prop = newProp;
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                        } else if (!TextUtils.isEmpty(prop) && !"null".equals(prop.trim())){
-                                props = getPropertyAfterRegex(props, prop, selector, sourceUrl, isUrl);
                         }
+                        if (!TextUtils.isEmpty(prop) && !"null".equals(prop.trim()))
+                            props = getPropertyAfterRegex(props, prop, selector, sourceUrl, isUrl);
                     }
                 }
             }
