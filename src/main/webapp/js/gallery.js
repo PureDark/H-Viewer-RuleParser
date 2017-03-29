@@ -32,6 +32,7 @@ $(document).ready(function(e) {
     });
 	
 	$("#btnTestRule").click(function(e) {
+		var action = $(this).attr("action");
 		var getHtml = ($(this).attr("getHtml")=="true")?"true":"false";
 		var site = $("#site").val();
 		var collection = $("#collection").val();
@@ -39,7 +40,7 @@ $(document).ready(function(e) {
 		     type: "POST",
 		     url: "servlet/RuleTester",
 			 data: {
-				 	action: 'getDetail',
+				 	action: action,
 				 	site: site,
 				 	getHtml : getHtml,
 					collection: collection

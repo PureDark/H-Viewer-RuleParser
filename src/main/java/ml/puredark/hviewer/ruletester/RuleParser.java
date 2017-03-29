@@ -239,9 +239,9 @@ public class RuleParser {
                 }
             } else {
                 ReadContext ctx = JsonPath.parse(text);
-                Logger.d("RuleParser", text);
+                //Logger.d("RuleParser", text);
                 items = getJsonArray(ctx, rule.item.path);
-                Logger.d("RuleParser", items.toString());
+                //Logger.d("RuleParser", items.toString());
                 for (Object item : items) {
                     String itemStr;
                     if (item instanceof JsonElement)
@@ -582,31 +582,28 @@ public class RuleParser {
                             prop = item.toString();
                         if (!TextUtils.isEmpty(selector.selector)) {
                             try {
-                                String newProp;
                                 Elements element = ("this".equals(selector.selector)) ? new Elements(Jsoup.parse(prop)) : Jsoup.parse(prop).select(selector.selector);
                                 if ("attr".equals(selector.fun)) {
-                                    newProp = element.attr(selector.param);
+                                	prop = element.attr(selector.param);
                                 } else if ("html".equals(selector.fun)) {
-                                    newProp = element.html();
+                                	prop = element.html();
                                 } else if ("text".equals(selector.fun)) {
-                                    newProp = element.text();
+                                	prop = element.text();
                                 } else {
-                                    newProp = element.toString();
+                                	prop = element.toString();
                                 }
-                                if (!TextUtils.isEmpty(newProp))
-                                    prop = newProp;
+                                if (!TextUtils.isEmpty(prop))
+                                	props = getPropertyAfterRegex(props, prop, selector, sourceUrl, isUrl);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
+                        } else if (!TextUtils.isEmpty(prop) && !"null".equals(prop.trim())){
+                                props = getPropertyAfterRegex(props, prop, selector, sourceUrl, isUrl);
                         }
-                        if (!TextUtils.isEmpty(prop) && !"null".equals(prop.trim()))
-                            props = getPropertyAfterRegex(props, prop, selector, sourceUrl, isUrl);
                     }
                 }
             }
         }
-        if (props.size() == 0)
-            props.add("");
         return props;
     }
 

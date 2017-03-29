@@ -158,7 +158,19 @@ public class RuleTesterServlet extends HttpServlet {
 					String generatedUrl = RuleParser.parseUrl(paramUrl, 0, collection.idCode, null, objs);
 					out.println(generatedUrl);
 				}
-			}else{
+			}else if("testTumblr".equals(action)){
+				String testHtml = request.getParameter("collection");
+				if(!TextUtils.isEmpty(siteJson) && !TextUtils.isEmpty(testHtml)){
+					Gson gson = new Gson();
+					Site site = gson.fromJson(siteJson, Site.class);
+			        Rule rule = site.indexRule;
+			        List<Collection> collections = new ArrayList<Collection>();
+			        collections = RuleParser.getCollections(collections, testHtml, rule, "https://www.tumblr.com/svc/discover/posts?offset=48&askingForPage=2&limit=20&type=trending&withFormKey=true");
+					String output = gson.toJson(collections);
+					out.println(output);
+				}
+			}
+			else{
 				out.println("no action");
 			}
         } catch (Exception e) {
