@@ -350,24 +350,16 @@ public class RuleParser {
         }
 
         Iterable temp;
+        JsonParser jsonParser = new JsonParser();
 
         List<Tag> tags = new ArrayList<>();
         if (rule.tagRule != null && rule.tagRule.item != null) {
-            if (source instanceof Element)
-                temp = ((Element) source).select(rule.tagRule.item.selector);
-            else if (source instanceof JsonElement) {
-                ReadContext ctx = JsonPath.parse(source.toString());
-                temp = getJsonArray(ctx, rule.tagRule.item.path);
-            } else
-                return collection;
+            temp = parseSinglePropertyMatchAll(source, rule.tagRule.item, sourceUrl, false);
             for (Object element : temp) {
-                if (rule.tagRule.item.regex != null) {
-                    Pattern pattern = Pattern.compile(rule.tagRule.item.regex);
-                    Matcher matcher = pattern.matcher(element.toString());
-                    if (!matcher.find()) {
-                        continue;
-                    }
-                }
+                if(isJson(element.toString()))
+                    element = jsonParser.parse(element.toString());
+                else
+                    element = Jsoup.parse(element.toString());
                 String tagTitle = parseSingleProperty(element, rule.tagRule.title, sourceUrl, false);
                 String tagUrl = parseSingleProperty(element, rule.tagRule.url, sourceUrl, true);
                 if (TextUtils.isEmpty(tagUrl))
@@ -401,21 +393,12 @@ public class RuleParser {
 
         if (pictureUrl != null && pictureThumbnail != null) {
             if (pictureItem != null) {
-                if (source instanceof Element)
-                    temp = ((Element) source).select(pictureItem.selector);
-                else if (source instanceof JsonElement) {
-                    ReadContext ctx = JsonPath.parse(source.toString());
-                    temp = getJsonArray(ctx, pictureItem.path);
-                } else
-                    return collection;
+                temp = parseSinglePropertyMatchAll(source, pictureItem, sourceUrl, false);
                 for (Object element : temp) {
-                    if (pictureItem.regex != null) {
-                        Pattern pattern = Pattern.compile(pictureItem.regex);
-                        Matcher matcher = pattern.matcher(element.toString());
-                        if (!matcher.find()) {
-                            continue;
-                        }
-                    }
+                    if(isJson(element.toString()))
+                        element = jsonParser.parse(element.toString());
+                    else
+                        element = Jsoup.parse(element.toString());
                     String pId = parseSingleProperty(element, pictureId, sourceUrl, false);
                     int pid;
                     try {
@@ -454,21 +437,12 @@ public class RuleParser {
 
         List<Video> videos = new ArrayList<>();
         if (rule.videoRule != null && rule.videoRule.item != null) {
-            if (source instanceof Element)
-                temp = ((Element) source).select(rule.videoRule.item.selector);
-            else if (source instanceof JsonElement) {
-                ReadContext ctx = JsonPath.parse(source.toString());
-                temp = getJsonArray(ctx, rule.videoRule.item.path);
-            } else
-                return collection;
+            temp = parseSinglePropertyMatchAll(source, rule.videoRule.item, sourceUrl, false);
             for (Object element : temp) {
-                if (rule.videoRule.item.regex != null) {
-                    Pattern pattern = Pattern.compile(rule.videoRule.item.regex);
-                    Matcher matcher = pattern.matcher(element.toString());
-                    if (!matcher.find()) {
-                        continue;
-                    }
-                }
+                if(isJson(element.toString()))
+                    element = jsonParser.parse(element.toString());
+                else
+                    element = Jsoup.parse(element.toString());
                 String vId = parseSingleProperty(element, rule.videoRule.id, sourceUrl, false);
                 int vid;
                 try {
@@ -501,21 +475,12 @@ public class RuleParser {
             commentContent = rule.commentContent;
         }
         if (commentItem != null && commentContent != null) {
-            if (source instanceof Element) {
-                temp = ((Element) source).select(commentItem.selector);
-            } else if (source instanceof JsonElement) {
-                ReadContext ctx = JsonPath.parse(source.toString());
-                temp = getJsonArray(ctx, commentItem.path);
-            } else
-                return collection;
+            temp = parseSinglePropertyMatchAll(source, commentItem, sourceUrl, false);
             for (Object element : temp) {
-                if (commentItem.regex != null) {
-                    Pattern pattern = Pattern.compile(commentItem.regex);
-                    Matcher matcher = pattern.matcher(element.toString());
-                    if (!matcher.find()) {
-                        continue;
-                    }
-                }
+                if(isJson(element.toString()))
+                    element = jsonParser.parse(element.toString());
+                else
+                    element = Jsoup.parse(element.toString());
                 String cAvatar = parseSingleProperty(element, commentAvatar, sourceUrl, false);
                 String cAuthor = parseSingleProperty(element, commentAuthor, sourceUrl, false);
                 String cDatetime = parseSingleProperty(element, commentDatetime, sourceUrl, false);
