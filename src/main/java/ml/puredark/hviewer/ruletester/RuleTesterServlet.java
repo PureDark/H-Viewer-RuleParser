@@ -90,12 +90,19 @@ public class RuleTesterServlet extends HttpServlet {
         try {
 			if("getList".equals(action)){
 				String targetUrl = request.getParameter("targetUrl");
+	            Logger.d("doPost", "targetUrl:"+targetUrl);
 				if(!TextUtils.isEmpty(siteJson) && !TextUtils.isEmpty(targetUrl)){
 					Gson gson = new Gson();
 					Site site = gson.fromJson(siteJson, Site.class);
-					List<Collection> collections = getCollections(site, targetUrl);
-					String output = gson.toJson(collections);
-					out.println(output);
+					String getHtml = request.getParameter("getHtml");
+					if(!"true".equals(getHtml)){
+						List<Collection> collections = getCollections(site, targetUrl);
+						String output = gson.toJson(collections);
+						out.println(output);
+					} else {
+						String html = getCollectionsHtml(site, targetUrl);
+						out.println(html);
+					}
 				}
 			}else if("getDetail".equals(action)){
 				String collectionJson = request.getParameter("collection");
@@ -103,9 +110,15 @@ public class RuleTesterServlet extends HttpServlet {
 					Gson gson = new Gson();
 					Site site = gson.fromJson(siteJson, Site.class);
 					Collection collection = gson.fromJson(collectionJson, Collection.class);
-					collection = getCollectionDetail(site, collection);
-					String output = gson.toJson(collection);
-					out.println(output);
+					String getHtml = request.getParameter("getHtml");
+					if(!"true".equals(getHtml)){
+						collection = getCollectionDetail(site, collection);
+						String output = gson.toJson(collection);
+						out.println(output);
+					} else {
+						String html = getCollectionDetailHtml(site, collection);
+						out.println(html);
+					}
 				}
 			}else if("generateQrCode".equals(action)){
 		        RequestBody requestBody = new FormBody.Builder()
@@ -127,15 +140,6 @@ public class RuleTesterServlet extends HttpServlet {
 						String base64 = Base64Util.getImageStr(bytes);
 						out.println(base64);
 	                }
-			}else if("getHtml".equals(action)){
-				String targetUrl = request.getParameter("targetUrl");
-	            Logger.d("doPost", "targetUrl:"+targetUrl);
-				if(!TextUtils.isEmpty(siteJson) && !TextUtils.isEmpty(targetUrl)){
-					Gson gson = new Gson();
-					Site site = gson.fromJson(siteJson, Site.class);
-					String html = HViewerHttpClient.get(targetUrl, site.getHeaders());
-					out.println(html);
-				}
 			}else if("getGeneratedIndexUrl".equals(action)){
 				String paramUrl = request.getParameter("paramUrl");
 	            Logger.d("doPost", "paramUrl:"+paramUrl);
@@ -167,28 +171,39 @@ public class RuleTesterServlet extends HttpServlet {
 	}
 	
 	private List<Collection> getCollections(Site site, String targetUrl) throws Exception {
-        final Rule rule = site.indexRule;
-        final String url = targetUrl;
-        Logger.d("getCollections", url);
+        Rule rule = site.indexRule;
+        String html = getCollectionsHtml(site, targetUrl);
+        List<Collection> collections = new ArrayList<Collection>();
+        collections = RuleParser.getCollections(collections, html, rule, targetUrl);
+        return collections;
+    }
+	
+	private String getCollectionsHtml(Site site, String targetUrl) throws Exception {
+        Logger.d("getCollections", targetUrl);
         String html = "";
         if (site.hasFlag(Site.FLAG_JS_NEEDED_ALL) || site.hasFlag(Site.FLAG_JS_NEEDED_INDEX)){
             Logger.d("getCollections", "browser");
         	html = getHtmlWithBrowser(targetUrl, site.getHeaders());
         }else if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
-            String params = (url == null) ? "" : url.substring(url.indexOf('?'));
+            String params = (targetUrl == null) ? "" : targetUrl.substring(targetUrl.indexOf('?'));
             Logger.d("getCollections", "post");
-        	html = HViewerHttpClient.post(url, params, site.getHeaders());
+        	html = HViewerHttpClient.post(targetUrl, params, site.getHeaders());
         }else {
             Logger.d("getCollections", "get");
-        	html = HViewerHttpClient.get(url, site.getHeaders());
+        	html = HViewerHttpClient.get(targetUrl, site.getHeaders());
         }
         Logger.d("getCollections", "result:"+html);
-        List<Collection> collections = new ArrayList<Collection>();
-        collections = RuleParser.getCollections(collections, html, rule, url);
-        return collections;
+        return html;
     }
 	
 	private Collection getCollectionDetail(Site site, Collection collection) {
+        final String url = site.getGalleryUrl(collection.idCode, 0, collection.pictures);
+        String html = getCollectionDetailHtml(site, collection);
+        collection = RuleParser.getCollectionDetail(collection, html, site.galleryRule, url);
+        return collection;
+    }
+	
+	private String getCollectionDetailHtml(Site site, Collection collection) {
         final String url = site.getGalleryUrl(collection.idCode, 0, collection.pictures);
         Logger.d("getCollectionDetail", url);
         String html = "";
@@ -202,8 +217,7 @@ public class RuleTesterServlet extends HttpServlet {
         	html = HViewerHttpClient.get(url, site.getHeaders());
         }
         Logger.d("getCollectionDetail", html);
-        collection = RuleParser.getCollectionDetail(collection, html, site.galleryRule, url);
-        return collection;
+        return html;
     }
 	
 	private String getHtmlWithBrowser(String url, LinkedHashMap<String, String> headers){

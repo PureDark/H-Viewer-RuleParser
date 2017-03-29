@@ -32,6 +32,7 @@ $(document).ready(function(e) {
     });
 	
 	$("#btnTestRule").click(function(e) {
+		var getHtml = ($(this).attr("getHtml")=="true")?"true":"false";
 		var site = $("#site").val();
 		var collection = $("#collection").val();
         $.ajax({
@@ -40,6 +41,7 @@ $(document).ready(function(e) {
 			 data: {
 				 	action: 'getDetail',
 				 	site: site,
+				 	getHtml : getHtml,
 					collection: collection
 				 	},
 		     dataType: "text",

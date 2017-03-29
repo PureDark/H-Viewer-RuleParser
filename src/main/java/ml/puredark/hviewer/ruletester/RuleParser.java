@@ -160,11 +160,10 @@ public class RuleParser {
         for (int i = 0; i < paths.length; i++) {
             JsonElement element;
             try {
-            	
                 element = ctx.read(paths[i], JsonElement.class);
             } catch (Exception e) {
             	Logger.d("RuleParser", "path["+i+"]:"+paths[i]);
-                e.printStackTrace();
+                //e.printStackTrace();
                 try {
                     if (paths.length > i + 1) {
                         element = ctx.read(paths[i] + paths[i + 1], JsonElement.class);
@@ -176,9 +175,11 @@ public class RuleParser {
                     continue;
                 }
             }
-            if (element instanceof JsonArray)
+            if(element == null || element.isJsonNull())
+                continue;
+            if ((element instanceof JsonArray)){
                 items.addAll(element.getAsJsonArray());
-            else {
+            }else {
                 items.add(element);
             }
         }

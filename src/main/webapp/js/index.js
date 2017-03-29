@@ -49,16 +49,16 @@ $(document).ready(function(e) {
     });
 	
 	$("#btnTestRule").click(function(e) {
-		var getHtml = ($(this).attr("getHtml")=="true");
-		var action = (getHtml==true)?"getHtml":"getList";
+		var getHtml = ($(this).attr("getHtml")=="true")?"true":"false";
 		var site = $("#site").val();
 		var targetUrl = $("#targetUrl").val();
 	    $.ajax({
 		     type: "POST",
 		     url: "servlet/RuleTester",
 			 data: {
-				 	action: action,
+				 	action: "getList",
 				 	site: site,
+				 	getHtml : getHtml,
 					targetUrl: targetUrl
 			 },
 		     dataType: "text",
