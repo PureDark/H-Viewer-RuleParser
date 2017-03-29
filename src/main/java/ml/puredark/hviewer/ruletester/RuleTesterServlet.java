@@ -216,7 +216,7 @@ public class RuleTesterServlet extends HttpServlet {
         }else {
         	html = HViewerHttpClient.get(url, site.getHeaders());
         }
-        Logger.d("getCollectionDetail", html);
+        //Logger.d("getCollectionDetail", html);
         return html;
     }
 	

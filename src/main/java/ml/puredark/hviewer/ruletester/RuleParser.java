@@ -359,7 +359,7 @@ public class RuleParser {
                 if(isJson(element.toString()))
                     element = jsonParser.parse(element.toString());
                 else
-                    element = Jsoup.parse(element.toString());
+                    element = Jsoup.parse(element.toString()).body().child(0);
                 String tagTitle = parseSingleProperty(element, rule.tagRule.title, sourceUrl, false);
                 String tagUrl = parseSingleProperty(element, rule.tagRule.url, sourceUrl, true);
                 if (TextUtils.isEmpty(tagUrl))
@@ -398,7 +398,7 @@ public class RuleParser {
                     if(isJson(element.toString()))
                         element = jsonParser.parse(element.toString());
                     else
-                        element = Jsoup.parse(element.toString());
+                        element = Jsoup.parse(element.toString()).body().child(0);
                     String pId = parseSingleProperty(element, pictureId, sourceUrl, false);
                     int pid;
                     try {
@@ -442,7 +442,7 @@ public class RuleParser {
                 if(isJson(element.toString()))
                     element = jsonParser.parse(element.toString());
                 else
-                    element = Jsoup.parse(element.toString());
+                    element = Jsoup.parse(element.toString()).body().child(0);
                 String vId = parseSingleProperty(element, rule.videoRule.id, sourceUrl, false);
                 int vid;
                 try {
