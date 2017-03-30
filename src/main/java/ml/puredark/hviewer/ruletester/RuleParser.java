@@ -405,10 +405,6 @@ public class RuleParser {
                             continue;
                         }
                     }
-                    if(isJson(element.toString()))
-                        element = jsonParser.parse(element.toString());
-                    else
-                        element = Jsoup.parse(element.toString());
                     String pId = parseSingleProperty(element, pictureId, sourceUrl, false);
                     int pid;
                     try {
@@ -456,10 +452,6 @@ public class RuleParser {
                         continue;
                     }
                 }
-                if(isJson(element.toString()))
-                    element = jsonParser.parse(element.toString());
-                else
-                    element = Jsoup.parse(element.toString());
                 String vId = parseSingleProperty(element, rule.videoRule.id, sourceUrl, false);
                 int vid;
                 try {
