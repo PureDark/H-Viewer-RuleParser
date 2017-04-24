@@ -104,5 +104,10 @@ public class Site  {
         Object[] array = (pictures != null) ? pictures.toArray() : null;
         return RuleParser.parseUrl(inUrl, page, idCode, "", array);
     }
+
+    public String getJsonParams(String url, int page, String keyword, List<Collection> collections) {
+        Object[] array = (collections != null) ? collections.toArray() : null;
+        return RuleParser.parseUrl(url, page, "", keyword, array, true);
+    }
     
 }

@@ -197,9 +197,10 @@ public class RuleTesterServlet extends HttpServlet {
             Logger.d("getCollections", "browser");
         	html = getHtmlWithBrowser(targetUrl, site.getHeaders());
         }else if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
-            String params = (targetUrl == null) ? "" : targetUrl.substring(targetUrl.indexOf('?'));
+        	String jsonParam = site.getJsonParams(targetUrl, 0, "", null);
+            String params = (jsonParam != null) ? jsonParam : targetUrl.substring(targetUrl.indexOf('?'));
             Logger.d("getCollections", "post");
-        	html = HViewerHttpClient.post(targetUrl, params, site.getHeaders());
+        	html = HViewerHttpClient.post(targetUrl, params, site.getHeaders(), (jsonParam != null));
         }else {
             Logger.d("getCollections", "get");
         	html = HViewerHttpClient.get(targetUrl, site.getHeaders());
@@ -223,8 +224,9 @@ public class RuleTesterServlet extends HttpServlet {
             Logger.d("getCollections", "browser");
         	html = getHtmlWithBrowser(url, site.getHeaders());
         }else if (site.hasFlag(Site.FLAG_POST_ALL) || site.hasFlag(Site.FLAG_POST_INDEX)){
-            String params = (url == null) ? "" : url.substring(url.indexOf('?'));
-        	html = HViewerHttpClient.post(url, params, site.getHeaders());
+        	String jsonParam = site.getJsonParams(site.galleryUrl, 0, "", null);
+            String params = (jsonParam != null) ? jsonParam : url.substring(url.indexOf('?'));
+        	html = HViewerHttpClient.post(url, params, site.getHeaders(), (jsonParam != null));
         }else {
         	html = HViewerHttpClient.get(url, site.getHeaders());
         }

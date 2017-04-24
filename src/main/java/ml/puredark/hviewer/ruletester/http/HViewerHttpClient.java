@@ -6,25 +6,40 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
+
 import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class HViewerHttpClient {
+	public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+    private static HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory(null, null, null, null);
     private static OkHttpClient mClient = new OkHttpClient.Builder()
-                                                .connectTimeout(30, TimeUnit.SECONDS)
-                                                .readTimeout(60, TimeUnit.SECONDS)
-                                                .build();
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1080)))
+            .hostnameVerifier(new HostnameVerifier(){
+				@Override
+				public boolean verify(String hostname, SSLSession session) {
+					return true;
+				}
+            })
+            .sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager)
+            .build();
 
     public static String get(String url, Map<String, String> headers){
         if (url == null || !url.startsWith("http")) {
@@ -66,15 +81,20 @@ public class HViewerHttpClient {
         return null;
     }
 
-    public static String post(String url, String paramsString, Map<String, String> headers) {
-        String[] paramStrings = paramsString.split("&");
-        FormBody.Builder formBody = new FormBody.Builder();
-        for (String paramString : paramStrings) {
-            String[] pram = paramString.split("=");
-            if (pram.length != 2) continue;
-            formBody.add(pram[0], pram[1]);
-        }
-        RequestBody requestBody = formBody.build();
+    public static String post(String url, String params, Map<String, String> headers, boolean isPostJson) {
+    	RequestBody requestBody = null;
+    	if(isPostJson){
+            requestBody = RequestBody.create(JSON, params);
+    	} else {
+            String[] paramStrings = params.split("&");
+            FormBody.Builder formBody = new FormBody.Builder();
+            for (String paramString : paramStrings) {
+                String[] pram = paramString.split("=");
+                if (pram.length != 2) continue;
+                formBody.add(pram[0], pram[1]);
+            }
+            requestBody = formBody.build();
+    	}
         return post(url, requestBody, headers);
     }
     
