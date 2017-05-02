@@ -31,7 +31,7 @@ public class HViewerHttpClient {
     private static OkHttpClient mClient = new OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
-            .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1080)))
+//            .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1080)))
             .hostnameVerifier(new HostnameVerifier(){
 				@Override
 				public boolean verify(String hostname, SSLSession session) {
